@@ -27,6 +27,30 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+
+    await queryInterface.addConstraint('Applications', {
+      fields: ['user_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_user_id23',
+      references: { 
+        table: 'Users',
+        field: 'id'
+      },
+      onDelete: 'cascade',
+      onUpdate: 'cascade'
+    });
+
+    await queryInterface.addConstraint('Applications', {
+      fields: ['vacancy_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_vacancy_id23',
+      references: { 
+        table: 'Vacancies',
+        field: 'id'
+      },
+      onDelete: 'cascade',
+      onUpdate: 'cascade'
+    });
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Applications');

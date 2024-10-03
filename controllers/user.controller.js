@@ -1,13 +1,13 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Token, Role, Userinfo, Userpermission, Permission, sequelize } = require('../models');
+const { User, Token, Role, UserProfile, Userpermission, Permission, sequelize } = require('../models');
 const baseConfig = require('../config/base.config');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
 const { generatePagination } = require('../pagination/pagination');
 const Validator = require("fastest-validator");
 const v = new Validator();
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const logger = require('../errorHandler/logger');
@@ -85,7 +85,7 @@ module.exports = {
             };
 
             // Membuat entri baru di tabel userinfo
-            let userinfoCreate = await Userinfo.create(userinfoCreateObj);
+            let userinfoCreate = await UserProfile.create(userinfoCreateObj);
 
             // Membuat object untuk create user
             let userCreateObj = {
@@ -150,59 +150,42 @@ module.exports = {
             // Mencari data user berdasarkan nik atau email yang disimpan dalam nik
             let whereClause = {
                 [Op.or]: [
-                    { nik: nik },
-                    { email: nik },
-                    { telepon: nik }
+                    { email: nik }
                 ]
             };
 
             const adminCondition = {};
             adminCondition.deletedAt = null;
             whereClause.deletedAt = null;
-
-            let userinfo = await Userinfo.findOne({
-                where: whereClause,
-                attributes: ['nik', 'email', 'id', 'telepon', 'name'],
+            
+            let user = await User.findOne({
+                where: {email: nik, deletedAt: null}, 
                 include: [
                     {
-                        model: User,
-                        attributes: ['password', 'id', 'role_id'],
-                        include: [
-                            {
-                                model: Role,
-                                attributes: ['id', 'name']
-                            },
-                            {
-                                model: Permission,
-                                through: Userpermission,
-                                as: 'permissions'
-                            },
-                        ],
-                        where: adminCondition
-                    },
-                ],
+                        model: Role,
+                        attributes: ['name', 'id'],
+                        as: 'Role'
+                    }
+                ]
             });
 
             // cek apakah user ditemukan
-            if (!userinfo) {
+            if (!user) {
                 res.status(404).json(response(404, 'User not found'));
                 return;
             }
 
             // check password
-            if (!passwordHash.verify(password, userinfo.User.password)) {
+            if (!passwordHash.verify(password, user.password)) {
                 res.status(403).json(response(403, 'password wrong'));
                 return;
             }
 
             // membuat token jwt
             let token = jwt.sign({
-                userId: userinfo.id,
-                name: userinfo.name,
-                user_akun_id: userinfo.User.id,
-                nik: userinfo.nik,
-                role: userinfo.User.Role.name,
-                permission: userinfo.User.permissions.map(permission => permission.name)
+                userId: user.id,
+                name: user.name,
+                role: user.Role.name,
             }, baseConfig.auth_secret, {
                 expiresIn: 864000 // time expired 
             });
@@ -264,13 +247,13 @@ module.exports = {
                             as: 'Role'
                         },
                         {
-                            model: Userinfo,
-                            as: 'Userinfo',
+                            model: UserProfile,
+                            as: 'UserProfile',
                         },
                     ],
                     limit: limit,
                     offset: offset,
-                    attributes: { exclude: ['Role', 'Userinfo'] },
+                    attributes: { exclude: ['Role', 'UserProfile'] },
                     order: [['id', 'ASC']],
                     where: whereCondition,
                 }),
@@ -283,11 +266,11 @@ module.exports = {
                 return {
                     id: user.id,
                     slug: user.slug,
-                    name: user.Userinfo?.name,
-                    nik: user.Userinfo?.nik,
+                    name: user.UserProfile?.name,
+                    nik: user.UserProfile?.nik,
                     role_id: user.Role?.id,
                     role_name: user.Role?.name,
-                    nik: user.Userinfo?.nik,
+                    nik: user.UserProfile?.nik,
                     createdAt: user.createdAt,
                     updatedAt: user.updatedAt
                 };
@@ -329,11 +312,11 @@ module.exports = {
                         as: 'Role'
                     },
                     {
-                        model: Userinfo,
-                        as: 'Userinfo'
+                        model: UserProfile,
+                        as: 'UserProfile'
                     },
                 ],
-                attributes: { exclude: ['Role', 'Userinfo'] }
+                attributes: { exclude: ['Role', 'UserProfile'] }
             });
 
             //cek jika user tidak ada
@@ -344,8 +327,8 @@ module.exports = {
 
             let formattedUsers = {
                 id: userGet.id,
-                name: userGet.Userinfo?.name,
-                nik: userGet.Userinfo?.nik,
+                name: userGet.UserProfile?.name,
+                nik: userGet.UserProfile?.nik,
                 role_id: userGet.Role?.id,
                 role_name: userGet.Role?.name,
                 createdAt: userGet.createdAt,
@@ -380,11 +363,11 @@ module.exports = {
                         as: 'Role'
                     },
                     {
-                        model: Userinfo,
-                        as: 'Userinfo',
+                        model: UserProfile,
+                        as: 'UserProfile',
                     },
                 ],
-                attributes: { exclude: ['Role', 'Userinfo'] }
+                attributes: { exclude: ['Role', 'UserProfile'] }
             });
 
             //cek jika user tidak ada
@@ -395,21 +378,21 @@ module.exports = {
 
             let formattedUsers = {
                 id: userGet.id,
-                name: userGet.Userinfo?.name,
-                slug: userGet.Userinfo?.slug,
-                nik: userGet.Userinfo?.nik,
-                email: userGet.Userinfo?.email,
-                telepon: userGet.Userinfo?.telepon,
-                alamat: userGet.Userinfo?.alamat,
-                agama: userGet.Userinfo?.agama,
-                tempat_lahir: userGet.Userinfo?.tempat_lahir,
-                tgl_lahir: userGet.Userinfo?.tgl_lahir,
-                status_kawin: userGet.Userinfo?.status_kawin,
-                gender: userGet.Userinfo?.gender,
-                pekerjaan: userGet.Userinfo?.pekerjaan,
-                goldar: userGet.Userinfo?.goldar,
-                pendidikan: userGet.Userinfo?.pendidikan,
-                foto: userGet.Userinfo?.foto,
+                name: userGet.UserProfile?.name,
+                slug: userGet.UserProfile?.slug,
+                nik: userGet.UserProfile?.nik,
+                email: userGet.UserProfile?.email,
+                telepon: userGet.UserProfile?.telepon,
+                alamat: userGet.UserProfile?.alamat,
+                agama: userGet.UserProfile?.agama,
+                tempat_lahir: userGet.UserProfile?.tempat_lahir,
+                tgl_lahir: userGet.UserProfile?.tgl_lahir,
+                status_kawin: userGet.UserProfile?.status_kawin,
+                gender: userGet.UserProfile?.gender,
+                pekerjaan: userGet.UserProfile?.pekerjaan,
+                goldar: userGet.UserProfile?.goldar,
+                pendidikan: userGet.UserProfile?.pendidikan,
+                foto: userGet.UserProfile?.foto,
                 role_id: userGet.Role?.id,
                 role_name: userGet.Role?.name,
                 createdAt: userGet.createdAt,
@@ -525,7 +508,7 @@ module.exports = {
             const user = await User.findOne({
                 include: [
                     {
-                        model: Userinfo,
+                        model: UserProfile,
                         attributes: ['email'],
                         where: { email },
                     }
@@ -545,7 +528,7 @@ module.exports = {
             await user.save();
 
             const mailOptions = {
-                to: user?.Userinfo?.email,
+                to: user?.UserProfile?.email,
                 from: process.env.EMAIL_NAME,
                 subject: 'Password Reset',
                 text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n

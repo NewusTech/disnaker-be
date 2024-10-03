@@ -6,7 +6,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const users = [
       {
-        userinfo_id: 1,
+        email: 'superadmin',
         password: passwordHash.generate('123456'),
         slug: "superadmin-20240620041615213",
         role_id: 1,
