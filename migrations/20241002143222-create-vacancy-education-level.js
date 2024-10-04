@@ -24,6 +24,26 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+
+    await queryInterface.addConstraint('VacancyEducationLevels', {
+      fields: ['vacancy_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_vacancy_id23',
+      references: { 
+        table: 'Vacancies',
+        field: 'id'
+      },  
+    });
+
+    await queryInterface.addConstraint('VacancyEducationLevels', {
+      fields: ['educationLevel_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_educationLevel_id23',
+      references: { 
+        table: 'EducationLevels',
+        field: 'id'
+      },  
+    });
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('VacancyEducationLevels');

@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Userinfo, Role, sequelize } = require('../models');
+const { User, UserProfile, Role, sequelize } = require('../models');
 
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
@@ -45,7 +45,7 @@ module.exports = {
 
             if (search) {
                 [userGets, totalCount] = await Promise.all([
-                    Userinfo.findAll({
+                    UserProfile.findAll({
                         where: {
                             [Op.or]: [
                                 { nik: { [Op.iLike]: `%${search}%` } },
@@ -68,7 +68,7 @@ module.exports = {
                         limit: limit,
                         offset: offset
                     }),
-                    Userinfo.count({
+                    UserProfile.count({
                         where: {
                             [Op.or]: [
                                 { nik: { [Op.iLike]: `%${search}%` } },
@@ -92,7 +92,7 @@ module.exports = {
                 ]);
             } else {
                 [userGets, totalCount] = await Promise.all([
-                    Userinfo.findAll({
+                    UserProfile.findAll({
                         limit: limit,
                         offset: offset,
                         include: [
@@ -109,7 +109,7 @@ module.exports = {
                             },
                         ],
                     }),
-                    Userinfo.count({
+                    UserProfile.count({
                         include: [
                             {
                                 model: User,
@@ -184,7 +184,7 @@ module.exports = {
                 whereCondition.deletedAt = null;
             }
 
-            let userGet = await Userinfo.findOne({
+            let userGet = await UserProfile.findOne({
                 where: whereCondition,
                 include: [
                     {
@@ -274,7 +274,7 @@ module.exports = {
             }
 
             // Update userinfo
-            let userinfoCreate = await Userinfo.create(userinfoObj)
+            let userinfoCreate = await UserProfile.create(userinfoObj)
 
             const firstName = req.body.name.split(' ')[0].toLowerCase();
             const generatedPassword = firstName + "123";
@@ -313,7 +313,7 @@ module.exports = {
     updateuserinfo: async (req, res) => {
         try {
             //mendapatkan data userinfo untuk pengecekan
-            let userinfoGet = await Userinfo.findOne({
+            let userinfoGet = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
@@ -384,7 +384,7 @@ module.exports = {
             }
 
             //update userinfo
-            await Userinfo.update(userinfoUpdateObj, {
+            await UserProfile.update(userinfoUpdateObj, {
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
@@ -392,7 +392,7 @@ module.exports = {
             })
 
             //mendapatkan data userinfo setelah update
-            let userinfoAfterUpdate = await Userinfo.findOne({
+            let userinfoAfterUpdate = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                 }
@@ -422,7 +422,7 @@ module.exports = {
         const transaction = await sequelize.transaction();
         try {
             // Mendapatkan data userinfo untuk pengecekan
-            let userinfoGet = await Userinfo.findOne({
+            let userinfoGet = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
@@ -440,7 +440,7 @@ module.exports = {
             let userinfoUpdateObj = {};
 
             // Update userinfo
-            await Userinfo.update(userinfoUpdateObj, {
+            await UserProfile.update(userinfoUpdateObj, {
                 where: {
                     slug: req.params.slug,
                 },
@@ -448,7 +448,7 @@ module.exports = {
             });
 
             // Mendapatkan data userinfo setelah update
-            let userinfoAfterUpdate = await Userinfo.findOne({
+            let userinfoAfterUpdate = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                 },
@@ -474,7 +474,7 @@ module.exports = {
         try {
 
             //mendapatkan data user untuk pengecekan
-            let userinfoGet = await Userinfo.findOne({
+            let userinfoGet = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
@@ -497,7 +497,7 @@ module.exports = {
             // Lakukan soft delete pada semua model terkait
             models.forEach(async modelName => {
                 const Model = sequelize.models[modelName];
-                if (Model.associations && Model.associations.Userinfo && Model.rawAttributes.deletedAt) {
+                if (Model.associations && Model.associations.UserProfile && Model.rawAttributes.deletedAt) {
                     updatePromises.push(
                         Model.update({ deletedAt: new Date() }, {
                             where: {
@@ -512,7 +512,7 @@ module.exports = {
             // Jalankan semua promise update secara bersamaan
             await Promise.all(updatePromises);
 
-            await Userinfo.update({ deletedAt: new Date() }, {
+            await UserProfile.update({ deletedAt: new Date() }, {
                 where: {
                     slug: req.params.slug
                 },
@@ -537,7 +537,7 @@ module.exports = {
         try {
             //mendapatkan data fotoprofil untuk pengecekan
 
-            let fotoprofilGet = await Userinfo.findOne({
+            let fotoprofilGet = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
@@ -593,7 +593,7 @@ module.exports = {
             }
 
             //update fotoprofil
-            await Userinfo.update(fotoprofilUpdateObj, {
+            await UserProfile.update(fotoprofilUpdateObj, {
                 where: {
                     slug: fotoprofilGet.slug,
                 },

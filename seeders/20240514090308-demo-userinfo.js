@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    const Userinfos = [
+    const UserProfiles = [
       {
         name: 'Super Admin',
         nik: 'superadmin',
@@ -12,10 +12,10 @@ module.exports = {
       },
     ];
 
-    await queryInterface.bulkInsert('Userinfos', Userinfos, {});
+    await queryInterface.bulkInsert('UserProfiles', UserProfiles, {});
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('Userinfos', null, {});
+    await queryInterface.bulkDelete('UserProfiles', null, {});
   }
 };

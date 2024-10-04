@@ -9,8 +9,8 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'role_id',
       });
 
-      User.belongsTo(models.Userinfo, {
-        foreignKey: 'userinfo_id',
+      User.hasOne(models.UserProfile, {
+        foreignKey: 'user_id',
       });
 
       User.belongsToMany(models.Permission, {
@@ -24,7 +24,6 @@ module.exports = (sequelize, DataTypes) => {
     password: DataTypes.STRING,
     slug: DataTypes.STRING,
     role_id: DataTypes.INTEGER,
-    userinfo_id: DataTypes.INTEGER,
     deletedAt: DataTypes.DATE,
     resetpasswordtoken: DataTypes.STRING,
     resetpasswordexpires: DataTypes.DATE,
