@@ -3,51 +3,44 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-
-    await queryInterface.bulkInsert('Skills', [
-      // Hard Skills
+    await queryInterface.bulkInsert('VacancyCategories', [
       {
-        name: 'Pengembangan Web',
+        name: 'Komputer',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Analisis Data',
+        name: 'Sales',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Pembelajaran Mesin',
+        name: 'Marketing',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Keamanan Siber',
+        name: 'Keuangan',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Pengembangan Aplikasi Mobile',
+        name: 'Pendidikan',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Komputasi Awan',
+        name: 'Administrasi',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Manajemen Basis Data',
+        name: 'Kesehatan',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Administrasi Jaringan',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: 'Pemasaran Digital',
+        name: 'Teknik',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -57,111 +50,79 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        name: 'Optimasi Mesin Pencari (SEO)',
+        name: 'Sumber Daya Manusia (HR)',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Manajemen Proyek',
+        name: 'Hukum',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Penulisan Teknis',
+        name: 'Ritel',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Editing Video',
+        name: 'Logistik',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Desain UI/UX',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-
-      // Soft Skills
-      {
-        name: 'Komunikasi',
+        name: 'Konstruksi',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Problem Solving',
+        name: 'Pariwisata',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Team Work',
+        name: 'Perhotelan',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Manajemen Waktu',
+        name: 'Pertanian',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Adaptasi',
+        name: 'Pertambangan',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Kepemimpinan',
+        name: 'Media & Jurnalistik',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Berpikir Kritis',
+        name: 'Pemerintahan',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Penyelesaian Konflik',
+        name: 'Keamanan',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Kecerdasan Emosional',
+        name: 'Pelayanan Publik',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Kreativitas',
+        name: 'Seni & Kreativitas',
         createdAt: new Date(),
         updatedAt: new Date(),
-      },
-      {
-        name: 'Negosiasi',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: 'Pengambilan Keputusan',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: 'Keterampilan Interpersonal',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: 'Public Speeking',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: 'Attention to Detail',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
+      }
+    ],);
   },
 
   async down (queryInterface, Sequelize) {
-
+    await queryInterface.bulkDelete('VacancyCategories', null, {});
   }
 };

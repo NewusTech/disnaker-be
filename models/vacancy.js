@@ -33,6 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     workingHour: DataTypes.STRING,
     jobType: DataTypes.ENUM('Full Time', 'Part Time', 'Freelance'),
     workLocation: DataTypes.ENUM('Onsite', 'Remote', 'Hybrid'),
+    isPublished: DataTypes.ENUM('true', 'false'),
     applicationDeadline: DataTypes.DATEONLY,
     salary: DataTypes.DECIMAL
   }, {

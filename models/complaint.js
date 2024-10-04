@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   Complaint.init({
     user_id: DataTypes.INTEGER,
+    submissionNumber:{
+      type: DataTypes.STRING,
+      unique: true
+    },
     title: DataTypes.STRING,
     desc: DataTypes.TEXT,
     response: DataTypes.TEXT,

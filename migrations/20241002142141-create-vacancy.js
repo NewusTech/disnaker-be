@@ -51,6 +51,10 @@ module.exports = {
       applicationDeadline: {
         type: Sequelize.DATEONLY
       },
+      isPublished: {
+        type: Sequelize.ENUM('true', 'false'),
+        allowNull: false,
+      },
       salary: {
         type: Sequelize.DECIMAL
       },

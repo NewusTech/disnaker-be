@@ -23,7 +23,7 @@ const checkRolesAndLogout = (allowedRoles) => async (req, res, next) => {
             return;
         }
 
-        data = decoded;
+        auth = decoded;
 
         const tokenCheck = await Token.findOne({ where: { token } });
 
@@ -32,7 +32,7 @@ const checkRolesAndLogout = (allowedRoles) => async (req, res, next) => {
             return;
         }
 
-        if (allowedRoles.includes(data.role)) {
+        if (allowedRoles.includes(auth.role)) {
             next();
         } else {
             res.status(403).json(response(403, 'Forbidden: insufficient access rights'));
@@ -48,7 +48,7 @@ const checkRoles = () => async (req, res, next) => {
     }
 
     jwt.verify(token, baseConfig.auth_secret, async (err, decoded) => {
-        data = decoded;
+        auth = decoded;
         next();
     });
 };

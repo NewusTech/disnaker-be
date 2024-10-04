@@ -19,14 +19,29 @@ module.exports = {
         type: Sequelize.STRING,
         unique: true
       },
-      bornDate: {
+      birthDate: {
         type: Sequelize.DATEONLY
+      },
+      birthPlace: {
+        type: Sequelize.STRING
       },
       gender: {
         type: Sequelize.ENUM('Laki-laki', 'Perempuan')
       },
-      address: {
+      religion : {
         type: Sequelize.STRING
+      },
+      profession: {
+        type: Sequelize.STRING
+      },
+      maritalStatus: {
+        type: Sequelize.STRING
+      },
+      citizenship: {
+        type: Sequelize.STRING
+      },
+      address: {
+        type: Sequelize.TEXT
       },
       phoneNumber: {
         type: Sequelize.STRING

@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     user_id: DataTypes.INTEGER,
     name: DataTypes.STRING,
     organization: DataTypes.STRING,
+    file: DataTypes.STRING,
     expiredDate: DataTypes.DATEONLY,
     isNonExpire: DataTypes.ENUM('true', 'false'),
     desc: DataTypes.TEXT

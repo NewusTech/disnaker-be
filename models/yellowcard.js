@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   YellowCard.init({
     residance: DataTypes.TEXT,
+    submissionNumber:{
+      type: DataTypes.STRING,
+      unique: true
+    },
     kelurahan_id: DataTypes.INTEGER,
     kecamatan_id: DataTypes.INTEGER,
     educationLevel_id: DataTypes.INTEGER,
