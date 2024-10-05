@@ -7,47 +7,62 @@ module.exports = {
     await queryInterface.bulkInsert('Skills', [
       // Hard Skills
       {
-        name: 'Pengembangan Web',
+        name: 'Web Developer',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Analisis Data',
+        name: 'Backend Developer',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Pembelajaran Mesin',
+        name: 'Frontend Developer',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Keamanan Siber',
+        name: 'Fullstack Developer',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Pengembangan Aplikasi Mobile',
+        name: 'Mobile Developer',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Komputasi Awan',
+        name: 'Data Analisis',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Manajemen Basis Data',
+        name: 'Machine Learning',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Administrasi Jaringan',
+        name: 'Cyber Security',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: 'Pemasaran Digital',
+        name: 'Dev Ops',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'Database Management',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'Netwok Engineer',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'Digital Marketing',
         createdAt: new Date(),
         updatedAt: new Date(),
       },

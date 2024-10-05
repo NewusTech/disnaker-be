@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     category_id: DataTypes.INTEGER,
     company_id: DataTypes.INTEGER,
     title: DataTypes.STRING,
+    slug: DataTypes.STRING,
     desc: DataTypes.TEXT,
     responsibility: DataTypes.TEXT,
     requirement: DataTypes.TEXT,

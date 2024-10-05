@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     birthDate: DataTypes.DATEONLY,
     slug: DataTypes.STRING,
+    department: DataTypes.STRING,
     gender: DataTypes.ENUM('Laki-laki', 'Perempuan'),
     address: DataTypes.TEXT,
     phoneNumber: DataTypes.STRING,
@@ -31,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     birthPlace: DataTypes.STRING,
     religion: DataTypes.STRING,
     profession: DataTypes.STRING,
+    employmentStatus: DataTypes.ENUM('Sudah Bekerja', 'Siap Bekerja', 'Tidak Bekerja'),
     maritalStatus: DataTypes.ENUM('Menikah', 'Belum Menikah'),
     citizenship: DataTypes.ENUM('WNI', 'WNA'),
     deletedAt: DataTypes.DATE

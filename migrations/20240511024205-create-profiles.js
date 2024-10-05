@@ -19,6 +19,9 @@ module.exports = {
         type: Sequelize.STRING,
         unique: true
       },
+      department: {
+        type: Sequelize.STRING
+      },
       birthDate: {
         type: Sequelize.DATEONLY
       },
@@ -42,6 +45,9 @@ module.exports = {
       },
       address: {
         type: Sequelize.TEXT
+      },
+      employmentStatus: {
+        type: Sequelize.STRING
       },
       phoneNumber: {
         type: Sequelize.STRING

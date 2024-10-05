@@ -10,7 +10,12 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        name: 'Sales',
+        name: 'Keuangan',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'Pendidikan',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -20,12 +25,7 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        name: 'Keuangan',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: 'Pendidikan',
+        name: 'Sales',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -41,11 +41,6 @@ module.exports = {
       },
       {
         name: 'Teknik',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: 'Desain Grafis',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
