@@ -1,6 +1,7 @@
 const baseConfig = require('../config/base.config');
 const { response } = require('../helpers/response.formatter');
 const { Token } = require('../models');
+const {UserProfile, CompanyProfile} = require('../models');
 const jwt = require('jsonwebtoken');
 
 const checkRolesAndLogout = (allowedRoles) => async (req, res, next) => {
@@ -23,7 +24,7 @@ const checkRolesAndLogout = (allowedRoles) => async (req, res, next) => {
             return;
         }
 
-        data = decoded;
+        auth = decoded;
 
         const tokenCheck = await Token.findOne({ where: { token } });
 
@@ -32,7 +33,7 @@ const checkRolesAndLogout = (allowedRoles) => async (req, res, next) => {
             return;
         }
 
-        if (allowedRoles.includes(data.role)) {
+        if (allowedRoles.includes(auth.role)) {
             next();
         } else {
             res.status(403).json(response(403, 'Forbidden: insufficient access rights'));
@@ -45,10 +46,12 @@ const checkRoles = () => async (req, res, next) => {
     try {
         token = req.headers.authorization.split(' ')[1];
     } catch (err) {
+        res.status(403).json(response(403, 'Unauthorized: invalid or missing token'));
+        return;
     }
 
     jwt.verify(token, baseConfig.auth_secret, async (err, decoded) => {
-        data = decoded;
+        auth = decoded;
         next();
     });
 };

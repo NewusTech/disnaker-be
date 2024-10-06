@@ -9,6 +9,9 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      submissionNumber: {
+        type: Sequelize.STRING
+      },
       residance: {
         type: Sequelize.TEXT
       },

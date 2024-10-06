@@ -11,27 +11,30 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   UserProfile.init({
+    user_id: {
+      type: DataTypes.INTEGER,
+      unique: true,
+    },
     name: DataTypes.STRING,
     nik: {
       type: DataTypes.STRING,
       unique: true,
     },
+    birthDate: DataTypes.DATEONLY,
     slug: DataTypes.STRING,
-    email: {
-      type: DataTypes.STRING,
-      unique: true,
-    },
+    department: DataTypes.STRING,
+    gender: DataTypes.ENUM('Laki-laki', 'Perempuan'),
+    address: DataTypes.TEXT,
     phoneNumber: DataTypes.STRING,
-    alamat: DataTypes.STRING,
-    agama: DataTypes.INTEGER,
-    tempat_lahir: DataTypes.STRING,
-    tgl_lahir: DataTypes.DATEONLY,
-    status_kawin: DataTypes.SMALLINT,
-    gender: DataTypes.SMALLINT,
-    pekerjaan: DataTypes.STRING,
-    goldar: DataTypes.SMALLINT,
-    pendidikan: DataTypes.SMALLINT,
-    foto: DataTypes.STRING,
+    about: DataTypes.TEXT,
+    cv: DataTypes.STRING,
+    portfolio: DataTypes.STRING,
+    birthPlace: DataTypes.STRING,
+    religion: DataTypes.STRING,
+    profession: DataTypes.STRING,
+    employmentStatus: DataTypes.ENUM('Sudah Bekerja', 'Siap Bekerja', 'Tidak Bekerja'),
+    maritalStatus: DataTypes.ENUM('Menikah', 'Belum Menikah'),
+    citizenship: DataTypes.ENUM('WNI', 'WNA'),
     deletedAt: DataTypes.DATE
   }, {
     sequelize,

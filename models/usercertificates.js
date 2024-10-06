@@ -3,28 +3,29 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class UserCertificates extends Model {
+  class UserCertificate extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      UserCertificates.belongsTo(models.User, {
+      UserCertificate.belongsTo(models.User, {
         foreignKey: 'user_id',
       });
     }
   }
-  UserCertificates.init({
+  UserCertificate.init({
     user_id: DataTypes.INTEGER,
     name: DataTypes.STRING,
     organization: DataTypes.STRING,
+    file: DataTypes.STRING,
     expiredDate: DataTypes.DATEONLY,
     isNonExpire: DataTypes.ENUM('true', 'false'),
     desc: DataTypes.TEXT
   }, {
     sequelize,
-    modelName: 'UserCertificates',
+    modelName: 'UserCertificate',
   });
-  return UserCertificates;
+  return UserCertificate;
 };

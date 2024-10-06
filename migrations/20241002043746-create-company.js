@@ -17,6 +17,9 @@ module.exports = {
       name: {
         type: Sequelize.STRING
       },
+      department: {
+        type: Sequelize.STRING
+      },
       desc: {
         type: Sequelize.TEXT
       },
@@ -51,6 +54,17 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+    await queryInterface.addConstraint('Companies', {
+      fields: ['user_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_user_id23',
+      references: { 
+        table: 'Users', 
+        field: 'id'
+      },
+      onDelete: 'cascade',
+      onUpdate: 'cascade'
+    })
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Companies');

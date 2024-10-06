@@ -18,6 +18,9 @@ module.exports = {
       title: {
         type: Sequelize.STRING
       },
+      slug: {
+        type: Sequelize.STRING
+      },
       desc: {
         type: Sequelize.TEXT
       },
@@ -50,6 +53,10 @@ module.exports = {
       },
       applicationDeadline: {
         type: Sequelize.DATEONLY
+      },
+      isPublished: {
+        type: Sequelize.ENUM('true', 'false'),
+        allowNull: false,
       },
       salary: {
         type: Sequelize.DECIMAL

@@ -9,6 +9,9 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      submissionNumber: {
+        type: Sequelize.STRING
+      },
       domicile: {
         type: Sequelize.TEXT
       },
@@ -24,7 +27,7 @@ module.exports = {
       kabupaten_id: {
         type: Sequelize.INTEGER
       },
-      status:{
+      status: {
         type: Sequelize.ENUM('Pengajuan', 'Proses', 'Terbit', 'Diterima', 'Ditolak')
       },
       kk: {

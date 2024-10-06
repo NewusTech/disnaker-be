@@ -4,19 +4,15 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Application extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
+      Application.belongsTo(models.User, { foreignKey: 'user_id' });
+      Application.belongsTo(models.Vacancy, { foreignKey: 'vacancy_id' });
     }
   }
   Application.init({
     user_id: DataTypes.INTEGER,
     vacancy_id: DataTypes.INTEGER,
-    status: DataTypes.ENUM('Dilamar', 'Dilihat', 'Diterima', 'Ditolak'),
+    status: DataTypes.ENUM('Dilamar', 'Wawancara', 'Tes', 'Diterima', 'Ditolak'),
   }, {
     sequelize,
     modelName: 'Application',

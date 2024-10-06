@@ -18,6 +18,9 @@ module.exports = {
       organization: {
         type: Sequelize.STRING
       },
+      file:{
+        type: Sequelize.STRING
+      },      
       expiredDate: {
         type: Sequelize.DATEONLY
       },

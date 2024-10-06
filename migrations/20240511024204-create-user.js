@@ -16,6 +16,9 @@ module.exports = {
       password: {
         type: Sequelize.STRING
       },
+      isActive: {
+        type: Sequelize.STRING  
+      },
       slug: {
         type: Sequelize.STRING,
         unique: true

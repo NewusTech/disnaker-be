@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Transmigration.init({
+    submissionNumber:{
+      type: DataTypes.STRING,
+      unique: true
+    },
     domicile: DataTypes.TEXT,
     kecamatan_id: DataTypes.INTEGER,
     kelurahan_id: DataTypes.INTEGER,
