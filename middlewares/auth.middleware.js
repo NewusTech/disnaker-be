@@ -1,6 +1,7 @@
 const baseConfig = require('../config/base.config');
 const { response } = require('../helpers/response.formatter');
 const { Token } = require('../models');
+const {UserProfile, CompanyProfile} = require('../models');
 const jwt = require('jsonwebtoken');
 
 const checkRolesAndLogout = (allowedRoles) => async (req, res, next) => {
@@ -45,6 +46,8 @@ const checkRoles = () => async (req, res, next) => {
     try {
         token = req.headers.authorization.split(' ')[1];
     } catch (err) {
+        res.status(403).json(response(403, 'Unauthorized: invalid or missing token'));
+        return;
     }
 
     jwt.verify(token, baseConfig.auth_secret, async (err, decoded) => {

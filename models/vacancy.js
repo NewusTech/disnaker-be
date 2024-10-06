@@ -17,6 +17,13 @@ module.exports = (sequelize, DataTypes) => {
       Vacancy.belongsTo(models.VacancyCategory, {
         foreignKey: 'category_id',
       });
+      Vacancy.hasMany(models.VacancySkill, {
+        foreignKey: 'vacancy_id',
+      });
+      Vacancy.hasMany(models.VacancyEducationLevel, {
+        foreignKey: 'vacancy_id',
+      });
+      Vacancy.hasMany(models.Application, { foreignKey: 'vacancy_id' });
     }
   }
   Vacancy.init({
@@ -40,6 +47,11 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Vacancy',
+  });
+  Vacancy.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['id', 'ASC']];
+    }
   });
   return Vacancy;
 };

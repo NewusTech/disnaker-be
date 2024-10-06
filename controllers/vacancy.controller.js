@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { Vacancy, VacancyCategory, Company } = require('../models');
+const { Vacancy, VacancyCategory, EducationLevel, VacancyEducationLevel, Company, VacancySkill, Skill } = require('../models');
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const logger = require('../errorHandler/logger');
@@ -78,7 +78,7 @@ module.exports = {
   //         }
 
   //         //mendapatkan data data untuk pengecekan
-  //         let dataGets = await Artikel.findOne({
+  //         let dataGets = await Vacancy.findOne({
   //             where: {
   //                 slug: vacancyCreateObj?.slug
   //             }
@@ -91,7 +91,7 @@ module.exports = {
   //         }
 
   //         //buat vacancy
-  //         let vacancyCreate = await Artikel.create(vacancyCreateObj);
+  //         let vacancyCreate = await Vacancy.create(vacancyCreateObj);
 
   //         //response menggunakan helper response.formatter
   //         res.status(201).json(response(201, 'success create vacancy', vacancyCreate));
@@ -128,16 +128,16 @@ module.exports = {
         whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
       }
 
-      if(req.query.mobile === 'true') {
-        whereCondition.isPublished = {[Op.eq]: req.query.mobile};
+      if (auth.roleId === 2) {
+        whereCondition.isPublished = { [Op.eq]: 'true' };
+        console.log('Role: ', auth.roleId);
       }
-
       [vacancyGets, totalCount] = await Promise.all([
         Vacancy.findAll({
           attributes: ['id', 'title', 'slug', 'workLocation', 'jobType', 'desc', 'applicationDeadline', 'isPublished', 'createdAt', 'updatedAt'],
           include: [
             { model: Company, attributes: ['id', 'name', 'imageLogo'] },
-            { model: VacancyCategory, attributes:['id', 'name'] }
+            { model: VacancyCategory, attributes: ['id', 'name'] }
           ],
           where: whereCondition,
           limit: limit,
@@ -166,37 +166,49 @@ module.exports = {
   },
 
   //mendapatkan data vacancy berdasarkan slug
-  // getvacancyBySlug: async (req, res) => {
-  //     try {
-  //         const whereCondition = { slug: req.params.slug };
+  getvacancyBySlug: async (req, res) => {
+    try {
+      const whereCondition = { slug: req.params.slug };
 
-  //         //mendapatkan data vacancy berdasarkan slug
-  //         let vacancyGet = await Artikel.findOne({
-  //             include: [{ model: Kategorivacancy, attributes: ['id', 'title'] }],
-  //             where: whereCondition
-  //         });
+      //mendapatkan data vacancy berdasarkan slug
+      let vacancyGet = await Vacancy.findOne({
+        attributes: ['id', 'title', 'slug', 'workLocation', 'jobType', 'minExperience', 'desc', 'maxAge', 'responsibility', 'requirement', 'applicationDeadline', 'isPublished', 'createdAt', 'updatedAt'],
+        where: whereCondition,
+        include: [
+          { model: Company, attributes: ['id', 'name', 'imageLogo', 'imageBanner', 'desc', 'address', 'numberEmployee', 'website', 'instagram'] },
+          { model: VacancyCategory, attributes: ['id', 'name'] },
+          {
+            model: VacancyEducationLevel,
+            include: [{ model: EducationLevel, }]
+          },
+          {
+            model: VacancySkill,
+            include: [{ model: Skill }]
+          }
+        ],
+      });
 
-  //         //cek jika vacancy tidak ada
-  //         if (!vacancyGet) {
-  //             res.status(404).json(response(404, 'vacancy not found'));
-  //             return;
-  //         }
+      //cek jika vacancy tidak ada
+      if (!vacancyGet) {
+        res.status(404).json(response(404, 'vacancy not found'));
+        return;
+      }
 
-  //         //response menggunakan helper response.formatter
-  //         res.status(200).json(response(200, 'success get vacancy by slug', vacancyGet));
-  //     } catch (err) {
-  //         logger.error(`Error : ${err}`);
-  //         logger.error(`Error message: ${err.message}`);
-  //         res.status(500).json(response(500, 'internal server error', err));
-  //         console.log(err);
-  //     }
-  // },
+      //response menggunakan helper response.formatter
+      res.status(200).json(response(200, 'success get vacancy by slug', vacancyGet));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
 
   //mengupdate vacancy berdasarkan slug
   // updatevacancy: async (req, res) => {
   //     try {
   //         //mendapatkan data vacancy untuk pengecekan
-  //         let vacancyGet = await Artikel.findOne({
+  //         let vacancyGet = await Vacancy.findOne({
   //             where: {
   //                 slug: req.params.slug,
   //             }
@@ -272,14 +284,14 @@ module.exports = {
   //         }
 
   //         //update vacancy
-  //         await Artikel.update(vacancyUpdateObj, {
+  //         await Vacancy.update(vacancyUpdateObj, {
   //             where: {
   //                 slug: req.params.slug,
   //             }
   //         })
 
   //         //mendapatkan data vacancy setelah update
-  //         let vacancyAfterUpdate = await Artikel.findOne({
+  //         let vacancyAfterUpdate = await Vacancy.findOne({
   //             where: {
   //                 slug: req.params.slug,
   //             }
@@ -301,7 +313,7 @@ module.exports = {
   //     try {
 
   //         //mendapatkan data vacancy untuk pengecekan
-  //         let vacancyGet = await Artikel.findOne({
+  //         let vacancyGet = await Vacancy.findOne({
   //             where: {
   //                 slug: req.params.slug                }
   //         })
@@ -312,7 +324,7 @@ module.exports = {
   //             return;
   //         }
 
-  //         await Artikel.destroy({
+  //         await Vacancy.destroy({
   //             where: {
   //                 slug: req.params.slug,
   //             }

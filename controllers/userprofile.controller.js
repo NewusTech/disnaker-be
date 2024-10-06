@@ -1,14 +1,16 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, UserProfile, Role, sequelize } = require('../models');
+const { User, UserExperience, UserProfile, UserEducationHistory, Role, sequelize, Application, Vacancy, SavedVacancy } = require('../models');
 
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
 const v = new Validator();
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const logger = require('../errorHandler/logger');
+const vacancy = require('../models/vacancy');
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -127,7 +129,7 @@ module.exports = {
                 ]);
             }
 
-            const pagination = generatePagination(totalCount, page, limit, '/api/userinfo/get');
+            const pagination = generatePagination(totalCount, page, limit, '/api/userprofile/get');
 
             const formattedData = userGets.map(user => {
                 return {
@@ -170,6 +172,33 @@ module.exports = {
             console.log(err);
         }
     },
+    getUserProfile: async (req, res) => {
+        try {
+            const user = await User.findOne({
+                where: { id: auth.userId },
+                attributes: ['id', 'email'],
+                include: [
+                    {
+                        model: UserProfile,
+                    },
+                    { model: UserExperience },
+                    { model: UserEducationHistory },
+                ]
+            });
+
+            if (!user) {
+                res.status(404).json(response(404, "UserProfile Not found"));
+                return;
+            }
+
+            return res.status(200).json(response(200, "Success Get User Profiles", user));
+        } catch (error) {
+            logger.error(`Error : ${error}`);
+            logger.error(`Error message: ${error.message}`);
+            console.error('Error fetching user permissions:', error);
+            res.status(500).json(response(500, 'internal server error', error));
+        }
+    },
 
     //mendapatkan data user berdasarkan slug
     getuserByslug: async (req, res) => {
@@ -205,9 +234,30 @@ module.exports = {
             console.log(err);
         }
     },
+    getUserApplications: async (req, res) => {
+        try {
+            const userWithApplications = await Application.findAll({
+                where: { user_id: auth.userId },
+                include: [{
+                    model: Vacancy, // Include Vacancy pada Application
+                }]
+            });
 
+            if (!userWithApplications) {
+                res.status(404).json(response(404, 'user not found'));
+                return;
+            }
+
+            res.status(200).json(response(200, 'success get user with Applications', userWithApplications));
+        } catch (error) {
+            logger.error(`Error : ${error}`);
+            logger.error(`Error message: ${error.message}`);
+            console.error('Error fetching user permissions:', error);
+            res.status(500).json(response(500, 'internal server error', error));
+        }
+    },
     //create data
-    createuserinfo: async (req, res) => {
+    createuserprofile: async (req, res) => {
         const transaction = await sequelize.transaction();
 
         try {
@@ -232,8 +282,8 @@ module.exports = {
             const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
             const slug = `${req.body.name}-${timestamp}`;
 
-            // Buat object userinfo
-            let userinfoObj = {
+            // Buat object userprofile
+            let userprofileObj = {
                 name: req.body.name,
                 nik: req.body.nik,
                 email: req.body.email,
@@ -251,7 +301,7 @@ module.exports = {
             };
 
             // Validasi menggunakan module fastest-validator
-            const validate = v.validate(userinfoObj, schema);
+            const validate = v.validate(userprofileObj, schema);
             if (validate.length > 0) {
                 // Format pesan error dalam bahasa Indonesia
                 const errorMessages = validate.map(error => {
@@ -273,8 +323,8 @@ module.exports = {
                 return;
             }
 
-            // Update userinfo
-            let userinfoCreate = await UserProfile.create(userinfoObj)
+            // Update userprofile
+            let userprofileCreate = await UserProfile.create(userprofileObj)
 
             const firstName = req.body.name.split(' ')[0].toLowerCase();
             const generatedPassword = firstName + "123";
@@ -283,7 +333,7 @@ module.exports = {
             let userCreateObj = {
                 password: passwordHash.generate(generatedPassword),
                 role_id: 1,
-                userinfo_id: userinfoCreate.id,
+                userprofile_id: userprofileCreate.id,
                 slug: slug
             };
 
@@ -291,7 +341,7 @@ module.exports = {
             await User.create(userCreateObj);
 
             await transaction.commit();
-            res.status(200).json(response(200, 'success create userinfo', userinfoCreate));
+            res.status(200).json(response(200, 'success create userprofile', userprofileCreate));
         } catch (err) {
             await transaction.rollback();
             if (err.name === 'SequelizeUniqueConstraintError') {
@@ -308,21 +358,73 @@ module.exports = {
         }
     },
 
+
+    savevacancy: async (req, res) => {
+        try {
+
+            //membuat schema untuk validasi
+            const schema = {
+                user_id: { type: "number", min: 1, optional: false },
+                vacancy_id: { type: "number", min: 1, optional: false }
+            }
+
+            //buat object savedVacancy
+            let savedVacancyCreateObj = {
+                user_id: auth.userId,
+                vacancy_id: parseInt(req.body.vacancy_id),
+            }
+
+            //validasi menggunakan module fastest-validator
+            const validate = v.validate(savedVacancyCreateObj, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            //buat savedVacancy
+            let savedVacancyCreate = await SavedVacancy.create(savedVacancyCreateObj);
+
+            //response menggunakan helper response.formatter
+            res.status(201).json(response(201, 'success create savedVacancy', savedVacancyCreate));
+        } catch (err) {
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
+            res.status(500).json(response(500, 'internal server error', err));
+        }
+    },
+    getsavedVacancy: async (req, res) => {
+        try {
+            const savedVacancyGets = await SavedVacancy.findAll({
+                where: {
+                    user_id: auth.userId
+                },
+                include: [{ model: Vacancy }]
+            });
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success get savedVacancy', savedVacancyGets));
+        } catch (err) {
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
+            res.status(500).json(response(500, 'internal server error', err));
+        }
+    },
+
     //update data person
     //user update sendiri
-    updateuserinfo: async (req, res) => {
+    updateuserprofile: async (req, res) => {
         try {
-            //mendapatkan data userinfo untuk pengecekan
-            let userinfoGet = await UserProfile.findOne({
+            //mendapatkan data userprofile untuk pengecekan
+            let userprofileGet = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
                 }
             })
 
-            //cek apakah data userinfo ada
-            if (!userinfoGet) {
-                res.status(404).json(response(404, 'userinfo not found'));
+            //cek apakah data userprofile ada
+            if (!userprofileGet) {
+                res.status(404).json(response(404, 'userprofile not found'));
                 return;
             }
 
@@ -343,8 +445,8 @@ module.exports = {
                 pendidikan: { type: "number", optional: true },
             }
 
-            //buat object userinfo
-            let userinfoUpdateObj = {
+            //buat object userprofile
+            let userprofileUpdateObj = {
                 name: req.body.name,
                 nik: req.body.nik,
                 email: req.body.email,
@@ -361,7 +463,7 @@ module.exports = {
             };
 
             //validasi menggunakan module fastest-validator
-            const validate = v.validate(userinfoUpdateObj, schema);
+            const validate = v.validate(userprofileUpdateObj, schema);
             if (validate.length > 0) {
                 // Format pesan error dalam bahasa Indonesia
                 const errorMessages = validate.map(error => {
@@ -383,23 +485,23 @@ module.exports = {
                 return;
             }
 
-            //update userinfo
-            await UserProfile.update(userinfoUpdateObj, {
+            //update userprofile
+            await UserProfile.update(userprofileUpdateObj, {
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
                 }
             })
 
-            //mendapatkan data userinfo setelah update
-            let userinfoAfterUpdate = await UserProfile.findOne({
+            //mendapatkan data userprofile setelah update
+            let userprofileAfterUpdate = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                 }
             })
 
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success update userinfo', userinfoAfterUpdate));
+            res.status(200).json(response(200, 'success update userprofile', userprofileAfterUpdate));
 
         } catch (err) {
             if (err.name === 'SequelizeUniqueConstraintError') {
@@ -421,8 +523,8 @@ module.exports = {
     updateuserdocs: async (req, res) => {
         const transaction = await sequelize.transaction();
         try {
-            // Mendapatkan data userinfo untuk pengecekan
-            let userinfoGet = await UserProfile.findOne({
+            // Mendapatkan data userprofile untuk pengecekan
+            let userprofileGet = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
@@ -430,25 +532,25 @@ module.exports = {
                 transaction
             });
 
-            // Cek apakah data userinfo ada
-            if (!userinfoGet) {
+            // Cek apakah data userprofile ada
+            if (!userprofileGet) {
                 await transaction.rollback();
-                res.status(404).json(response(404, 'userinfo not found'));
+                res.status(404).json(response(404, 'userprofile not found'));
                 return;
             }
 
-            let userinfoUpdateObj = {};
+            let userprofileUpdateObj = {};
 
-            // Update userinfo
-            await UserProfile.update(userinfoUpdateObj, {
+            // Update userprofile
+            await UserProfile.update(userprofileUpdateObj, {
                 where: {
                     slug: req.params.slug,
                 },
                 transaction
             });
 
-            // Mendapatkan data userinfo setelah update
-            let userinfoAfterUpdate = await UserProfile.findOne({
+            // Mendapatkan data userprofile setelah update
+            let userprofileAfterUpdate = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                 },
@@ -458,7 +560,7 @@ module.exports = {
             await transaction.commit();
 
             // Response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success update userinfo', userinfoAfterUpdate));
+            res.status(200).json(response(200, 'success update userprofile', userprofileAfterUpdate));
 
         } catch (err) {
             await transaction.rollback();
@@ -474,7 +576,7 @@ module.exports = {
         try {
 
             //mendapatkan data user untuk pengecekan
-            let userinfoGet = await UserProfile.findOne({
+            let userprofileGet = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
@@ -483,7 +585,7 @@ module.exports = {
             })
 
             //cek apakah data user ada
-            if (!userinfoGet) {
+            if (!userprofileGet) {
                 await transaction.rollback();
                 res.status(404).json(response(404, 'data not found'));
                 return;
@@ -501,7 +603,7 @@ module.exports = {
                     updatePromises.push(
                         Model.update({ deletedAt: new Date() }, {
                             where: {
-                                userinfo_id: userinfoGet.id
+                                userprofile_id: userprofileGet.id
                             },
                             transaction
                         })

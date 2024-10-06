@@ -186,6 +186,7 @@ module.exports = {
                 email: user.email,
                 name: user.UserProfile.name,
                 profileId: user.UserProfile.id,
+                roleId: user.role_id,
                 role: user.Role.name,
             }, baseConfig.auth_secret, {
                 expiresIn: 864000 // time expired 

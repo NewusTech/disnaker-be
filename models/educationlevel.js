@@ -10,11 +10,13 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      EducationLevel.hasMany(models.VacancyEducationLevel,{
+        foreignKey:'educationLevel_id'
+      });
     }
   }
   EducationLevel.init({
-    title: DataTypes.STRING
+    level: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'EducationLevel',
