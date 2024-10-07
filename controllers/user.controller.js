@@ -77,7 +77,7 @@ module.exports = {
             let user = await User.create(userCreateObj);
 
             // Membuat object untuk create userProfileObj
-            let userProfileObj= {
+            let userProfileObj = {
                 name: req.body.name,
                 user_id: user.id,
                 slug: slug
@@ -151,15 +151,15 @@ module.exports = {
             const adminCondition = {};
             adminCondition.deletedAt = null;
             whereClause.deletedAt = null;
-            
-            let user = await User.findOne({
-                where: {email: nik, deletedAt: null}, 
+
+            let user = await User.scope('withPassword').findOne({
+                where: { email: nik, deletedAt: null },
                 include: [
                     {
                         model: Role,
                         attributes: ['name', 'id'],
                         as: 'Role'
-                    }, 
+                    },
                     {
                         model: UserProfile,
                         as: 'UserProfile',
@@ -173,6 +173,10 @@ module.exports = {
                 res.status(404).json(response(404, 'User not found'));
                 return;
             }
+            console.log('user: ', user.id);
+            console.log('user: ', user.password);
+            console.log('user: ', user.email);
+            console.log('password: ', password);
 
             // check password
             if (!passwordHash.verify(password, user.password)) {
@@ -185,7 +189,6 @@ module.exports = {
                 userId: user.id,
                 email: user.email,
                 name: user.UserProfile.name,
-                profileId: user.UserProfile.id,
                 roleId: user.role_id,
                 role: user.Role.name,
             }, baseConfig.auth_secret, {

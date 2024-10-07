@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     kecamatan_id: DataTypes.INTEGER,
     educationLevel_id: DataTypes.INTEGER,
     job: DataTypes.STRING,
+    skill: DataTypes.TEXT,
     status: DataTypes.ENUM('Pengajuan', 'Proses', 'Terbit', 'Ditolak')
   }, {
     sequelize,
