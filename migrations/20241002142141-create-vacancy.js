@@ -31,7 +31,7 @@ module.exports = {
         type: Sequelize.TEXT
       },
       gender: {
-        type: Sequelize.ENUM('Laki-laki', 'Perempuan')
+        type: Sequelize.STRING
       },
       minExperience: {
         type: Sequelize.INTEGER

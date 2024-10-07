@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
     desc: DataTypes.TEXT,
     responsibility: DataTypes.TEXT,
     requirement: DataTypes.TEXT,
-    gender: DataTypes.ENUM('Laki-laki', 'Perempuan'),
+    gender: DataTypes.ENUM('Laki-laki', 'Perempuan', 'Semua'),
     minExperience: DataTypes.INTEGER,
     maxAge: DataTypes.INTEGER,
     workingDay: DataTypes.STRING,

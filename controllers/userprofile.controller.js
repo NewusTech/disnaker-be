@@ -236,23 +236,30 @@ module.exports = {
     },
     getUserApplications: async (req, res) => {
         try {
+            let whereCondition = { user_id: auth.userId };
+            
+            if (req.query.status) {
+                whereCondition.status = { [Op.eq]: req.query.status };
+            }
+    
             const userWithApplications = await Application.findAll({
-                where: { user_id: auth.userId },
+                where: whereCondition,
                 include: [{
-                    model: Vacancy, // Include Vacancy pada Application
+                    model: Vacancy, // Include Vacancy relation in the result
                 }]
             });
-
-            if (!userWithApplications) {
-                res.status(404).json(response(404, 'user not found'));
+    
+            if (!userWithApplications || userWithApplications.length === 0) {
+                res.status(404).json(response(404, 'Applications not found'));
                 return;
             }
-
+            // Success response
             res.status(200).json(response(200, 'success get user with Applications', userWithApplications));
         } catch (error) {
+            // Log error details and send 500 response
             logger.error(`Error : ${error}`);
             logger.error(`Error message: ${error.message}`);
-            console.error('Error fetching user permissions:', error);
+            console.error('Error fetching user applications:', error);
             res.status(500).json(response(500, 'internal server error', error));
         }
     },

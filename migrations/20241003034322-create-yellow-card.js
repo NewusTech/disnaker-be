@@ -27,6 +27,9 @@ module.exports = {
       job: {
         type: Sequelize.STRING
       },
+      skill: {
+        type: Sequelize.TEXT
+      },
       status: {
         type: Sequelize.ENUM('Pengajuan', 'Proses', 'Terbit', 'Ditolak')
       },
