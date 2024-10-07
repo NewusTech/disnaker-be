@@ -237,18 +237,18 @@ module.exports = {
     getUserApplications: async (req, res) => {
         try {
             let whereCondition = { user_id: auth.userId };
-            
+
             if (req.query.status) {
                 whereCondition.status = { [Op.eq]: req.query.status };
             }
-    
+
             const userWithApplications = await Application.findAll({
                 where: whereCondition,
                 include: [{
                     model: Vacancy, // Include Vacancy relation in the result
                 }]
             });
-    
+
             if (!userWithApplications || userWithApplications.length === 0) {
                 res.status(404).json(response(404, 'Applications not found'));
                 return;
@@ -364,7 +364,67 @@ module.exports = {
             console.log(err);
         }
     },
+    createusereducation: async (req, res) => {
+        const transaction = await sequelize.transaction();
 
+        try {
+
+            // Membuat schema untuk validasi
+            const schema = {
+                educationLevel_id: { type: "number", optional: false },
+                instanceName: { type: "string", optional: true },
+                department: { type: "string", optional: true },
+                gpa: { type: "number", optional: true },
+                joinDate: { type: "string", optional: true },
+                graduationDate: { type: "string", optional: true },
+                desc: { type: "string", optional: true }
+            }
+
+            // Buat object userprofile
+            let userEducationObj = {
+                educationLevel_id: req.body.educationLevel_id,
+                instanceName: req.body.instanceName,
+                department: req.body.department,
+                gpa: req.body.gpa,
+                joinDate: req.body.joinDate,
+                graduationDate: req.body.graduationDate,
+                desc: req.body.desc
+            };
+
+            // Validasi menggunakan module fastest-validator
+            const validate = v.validate(userEducationObj, schema);
+            if (validate.length > 0) {
+                // Format pesan error dalam bahasa Indonesia
+                const errorMessages = validate.map(error => {
+                    if (error.type === 'stringMin') {
+                        return `Field ${error.field} minimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringMax') {
+                        return `Field ${error.field} maksimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringPattern') {
+                        return `Field ${error.field} format tidak valid`;
+                    } else {
+                        return `Field ${error.field} tidak valid`;
+                    }
+                });
+
+                res.status(400).json({
+                    status: 400,
+                    message: errorMessages.join(', ')
+                });
+                return;
+            }
+
+            // create user education
+            let userprofileCreate = await UserEducationHistory.create(userEducationObj)
+
+            res.status(200).json(response(200, 'success create userprofile', userprofileCreate));
+        } catch (err) {
+            logger.error(`Error: ${err}`);
+            logger.error(`Error: ${err.message}`);
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
 
     savevacancy: async (req, res) => {
         try {
@@ -420,6 +480,7 @@ module.exports = {
     //update data person
     //user update sendiri
     updateuserprofile: async (req, res) => {
+        const transaction = await sequelize.transaction();
         try {
             //mendapatkan data userprofile untuk pengecekan
             let userprofileGet = await UserProfile.findOne({
@@ -438,35 +499,34 @@ module.exports = {
             //membuat schema untuk validasi
             const schema = {
                 name: { type: "string", min: 2, optional: true },
-                nik: { type: "string", length: 16, optional: true },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
-                telepon: { type: "string", min: 7, max: 15, pattern: /^[0-9]+$/, optional: true },
-                alamat: { type: "string", min: 3, optional: true },
-                agama: { type: "number", optional: true },
-                tempat_lahir: { type: "string", min: 2, optional: true },
-                tgl_lahir: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}$/, optional: true },
-                status_kawin: { type: "number", optional: true },
-                gender: { type: "number", optional: true },
-                pekerjaan: { type: "string", optional: true },
-                goldar: { type: "number", optional: true },
+                nik: { type: "string", length: 16, optional: true },
+                department: { type: "string", min: 2, optional: true },
+                phoneNumber: { type: "string", min: 7, max: 15, pattern: /^[0-9]+$/, optional: true },
+                address: { type: "string", min: 3, optional: true },
+                religion: { type: "string", optional: true },
+                birthPlace: { type: "string", min: 2, optional: true },
+                birthDate: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}$/, optional: true },
+                maritalStatus: { type: "string", optional: true },
+                gender: { type: "string", optional: true },
+                profession: { type: "string", optional: true },
                 pendidikan: { type: "number", optional: true },
             }
 
             //buat object userprofile
             let userprofileUpdateObj = {
                 name: req.body.name,
-                nik: req.body.nik,
                 email: req.body.email,
-                telepon: req.body.telepon,
-                alamat: req.body.alamat,
-                agama: req.body.agama ? Number(req.body.agama) : undefined,
-                tempat_lahir: req.body.tempat_lahir,
-                tgl_lahir: req.body.tgl_lahir,
-                status_kawin: req.body.status_kawin ? Number(req.body.status_kawin) : undefined,
-                gender: req.body.gender ? Number(req.body.gender) : undefined,
-                pekerjaan: req.body.pekerjaan,
-                goldar: req.body.goldar ? Number(req.body.goldar) : undefined,
-                pendidikan: req.body.pendidikan ? Number(req.body.pendidikan) : undefined,
+                nik: req.body.nik,
+                department: req.body.department,
+                birthPlace: req.body.birthPlace,
+                birthDate: req.body.birthDate,
+                phoneNumber: req.body.phoneNumber,
+                address: req.body.address,
+                religion: req.body.religion,
+                maritalStatus: req.body.maritalStatus,
+                gender: req.body.gender,
+                profession: req.body.profession,
             };
 
             //validasi menggunakan module fastest-validator
@@ -499,6 +559,13 @@ module.exports = {
                     deletedAt: null
                 }
             })
+            await User.update({
+                email: userprofileUpdateObj.email
+            }, {
+                where: {
+                    id: auth.userId
+                }
+            });
 
             //mendapatkan data userprofile setelah update
             let userprofileAfterUpdate = await UserProfile.findOne({
@@ -507,10 +574,12 @@ module.exports = {
                 }
             })
 
+            await transaction.commit();
             //response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success update userprofile', userprofileAfterUpdate));
 
         } catch (err) {
+            await transaction.rollback();
             if (err.name === 'SequelizeUniqueConstraintError') {
                 // Menangani error khusus untuk constraint unik
                 res.status(400).json({
@@ -522,6 +591,51 @@ module.exports = {
                 res.status(500).json(response(500, 'terjadi kesalahan pada server', err));
             }
             console.log(err);
+        }
+    },
+
+    //update about user
+    updateaboutuser: async (req, res) => {
+        try {
+
+            //membuat schema untuk validasi
+            const schema = {
+                about: { type: "string", min: 2, optional: true },
+            }
+
+            //validasi menggunakan module fastest-validator
+            const validate = v.validate(req.body, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            const whereCondition = { slug: req.params.slug };
+
+            //mendapatkan data userprofile untuk pengecekan
+            let userprofileGet = await UserProfile.findOne({
+                where: whereCondition
+            });
+
+            if (!userprofileGet) {
+                res.status(404).json(response(404, "Userprofile Not found"));
+                return;
+            }
+
+            //update userprofile
+            await UserProfile.update(req.body, { where: whereCondition });
+
+            //mendapatkan data userprofile setelah update
+            let userprofileAfterUpdate = await UserProfile.findOne({
+                where: whereCondition
+            })
+
+            res.status(200).json(response(200, 'success update userprofile', userprofileAfterUpdate));
+        } catch (error) {
+            logger.error(`Error : ${error}`);
+            logger.error(`Error message: ${error.message}`);
+            console.log(err);
+            res.status(500).json(response(500, 'internal server error', err));
         }
     },
 
