@@ -173,10 +173,6 @@ module.exports = {
                 res.status(404).json(response(404, 'User not found'));
                 return;
             }
-            console.log('user: ', user.id);
-            console.log('user: ', user.password);
-            console.log('user: ', user.email);
-            console.log('password: ', password);
 
             // check password
             if (!passwordHash.verify(password, user.password)) {
@@ -347,7 +343,6 @@ module.exports = {
             console.log(err);
         }
     },
-
     getforuser: async (req, res) => {
         try {
             const showDeleted = req.query.showDeleted ?? null;
