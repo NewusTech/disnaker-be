@@ -118,7 +118,7 @@ module.exports = {
     loginUser: async (req, res) => {
         try {
             const schema = {
-                nik: {
+                email: {
                     type: "string",
                     min: 3,
                 },
@@ -128,12 +128,12 @@ module.exports = {
                 }
             };
 
-            let nik = req.body.nik;
+            let email = req.body.email;
             let password = req.body.password;
 
             // Validasi input
             const validate = v.validate({
-                nik: nik,
+                email: email,
                 password: password,
             }, schema);
             if (validate.length > 0) {
@@ -141,10 +141,10 @@ module.exports = {
                 return;
             }
 
-            // Mencari data user berdasarkan nik atau email yang disimpan dalam nik
+            // Mencari data user berdasarkan email
             let whereClause = {
                 [Op.or]: [
-                    { email: nik }
+                    { email: email }
                 ]
             };
 
@@ -153,7 +153,7 @@ module.exports = {
             whereClause.deletedAt = null;
 
             let user = await User.scope('withPassword').findOne({
-                where: { email: nik, deletedAt: null },
+                where: { email: email, deletedAt: null },
                 include: [
                     {
                         model: Role,
