@@ -140,7 +140,7 @@ module.exports = {
 
       [vacancyGets, totalCount] = await Promise.all([
         Vacancy.findAll({
-          attributes: ['id', 'title', 'slug', 'workLocation', 'jobType', 'desc', 'applicationDeadline', 'isPublished', 'createdAt', 'updatedAt'],
+          attributes: ['id', 'title', 'slug',  'workLocation', 'jobType', 'desc', 'applicationDeadline', 'salary', 'location', 'isPublished', 'createdAt', 'updatedAt'],
           include: [
             { model: Company, attributes: ['id', 'name', 'imageLogo'] },
             { model: VacancyCategory, attributes: ['id', 'name'] }
