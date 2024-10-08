@@ -30,5 +30,10 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Company',
   });
+  Company.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['id', 'DESC']];
+    }
+  });
   return Company;
 };
