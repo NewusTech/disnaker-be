@@ -176,7 +176,7 @@ module.exports = {
             let favoriteCount;
             let applicationCount;
             let user;
-            [user, favoriteCount, applicationCount] = await Promise.all([
+            [user, applicationCount, favoriteCount] = await Promise.all([
                 await User.findOne({
                     where: { id: auth.userId },
                     attributes: ['id', 'email'],
