@@ -55,6 +55,38 @@ module.exports = {
       res.status(500).json(response(500, 'internal server error', err));
     }
   },
+
+  unsavevacancy: async (req, res) => {
+    try {
+      //mendapatkan data savedVacancy untuk pengecekan
+      let savedVacancyGet = await SavedVacancy.findOne({
+        where: {
+          user_id: auth.userId,
+          vacancy_id: Number(req.body.vacancy_id)
+        }
+      });
+
+      //cek apakah savedVacancy ada atau tidak
+      if (!savedVacancyGet) {
+        res.status(404).json(response(404, 'savedVacancy not found'));
+      } 
+
+      let savedVacancyDelete = await SavedVacancy.destroy({
+        where: {
+          user_id: auth.userId,
+          vacancy_id: req.body.vacancy_id
+        }
+      });
+
+      //response menggunakan helper response.formatter
+        res.status(200).json(response(200, 'success delete savedVacancy', savedVacancyDelete));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
+
   getsavedVacancy: async (req, res) => {
     try {
       const savedVacancyGets = await SavedVacancy.findAll({
