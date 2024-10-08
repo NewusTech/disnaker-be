@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, UserExperience, UserProfile, UserCertificate, UserEducationHistory,UserLink, Skill, Role, sequelize, UserOrganization, UserSkill } = require('../models');
+const { Application, SavedVacancy, User, UserExperience, UserProfile, UserCertificate, UserEducationHistory, UserLink, Skill, Role, sequelize, UserOrganization, UserSkill } = require('../models');
 
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
@@ -173,26 +173,43 @@ module.exports = {
     },
     getUserProfile: async (req, res) => {
         try {
-            const user = await User.findOne({
-                where: { id: auth.userId },
-                attributes: ['id', 'email'],
-                include: [
-                    { model: UserProfile},
-                    { model: UserExperience },
-                    { model: UserEducationHistory },
-                    { model: UserOrganization },
-                    { model: Skill },
-                    { model: UserCertificate },
-                    { model: UserLink },
-                ]
-            });
+            let favoriteCount;
+            let applicationCount;
+            let user;
+            [user, favoriteCount, applicationCount] = await Promise.all([
+                await User.findOne({
+                    where: { id: auth.userId },
+                    attributes: ['id', 'email'],
+                    include: [
+                        { model: UserProfile },
+                        { model: UserExperience },
+                        { model: UserEducationHistory },
+                        { model: UserOrganization },
+                        { model: Skill },
+                        { model: UserCertificate },
+                        { model: UserLink },
+                    ]
+                }),
+                Application.count({
+                    where: { user_id: auth.userId }
+                }),
+                SavedVacancy.count({
+                    where: { user_id: auth.userId }
+                })
+            ]);
 
             if (!user) {
                 res.status(404).json(response(404, "UserProfile Not found"));
                 return;
             }
 
-            return res.status(200).json(response(200, "Success Get User Profiles", user));
+            return res.status(200).json({
+                status: 200,
+                message: "success get user profile",
+                data: user,
+                favoriteCount: favoriteCount,
+                applicationCount: applicationCount
+            });
         } catch (error) {
             logger.error(`Error : ${error}`);
             logger.error(`Error message: ${error.message}`);
