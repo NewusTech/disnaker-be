@@ -16,8 +16,7 @@ module.exports = {
     const transaction = await sequelize.transaction();
     try {
       const company = await Company.findOne({ where: { user_id: auth.userId }, attributes: ['id', 'user_id'] });
-      console.log('this Company', company);
-      console.log('this Auth', auth);
+
       //membuat schema untuk validasi
       const schema = {
         title: { type: "string", min: 3 },
@@ -138,7 +137,7 @@ module.exports = {
         default:
           break;
       }
-      
+
       [vacancyGets, totalCount] = await Promise.all([
         Vacancy.findAll({
           attributes: ['id', 'title', 'slug', 'workLocation', 'jobType', 'desc', 'applicationDeadline', 'isPublished', 'createdAt', 'updatedAt'],
@@ -171,7 +170,17 @@ module.exports = {
       console.log(err);
     }
   },
-
+  getvacancycategories: async (req, res) => {
+    try {
+      const vacancycategories = await VacancyCategory.findAll({attributes: ['id', 'name']});
+      res.status(200).json(response(200, 'success get vacancycategories', vacancycategories));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
   //mendapatkan data vacancy berdasarkan slug
   getvacancyBySlug: async (req, res) => {
     try {
@@ -215,8 +224,8 @@ module.exports = {
   updatevacancystatus: async (req, res) => {
     try {
       const schema = {
-        status: {type: 'string', optional: false },
-        vacancy_id: {type: 'number', optional: false }
+        status: { type: 'string', optional: false },
+        vacancy_id: { type: 'number', optional: false }
       }
       const vacancyCreateObj = {
         status: req.body.status,
@@ -228,7 +237,7 @@ module.exports = {
         res.status(400).json(response(400, 'validation failed', validate));
         return;
       }
-      
+
       const whereCondition = { slug: req.params.slug };
       //mendapatkan data vacancy untuk pengecekan
       let vacancyGet = await Vacancy.findOne({
