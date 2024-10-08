@@ -502,20 +502,22 @@ module.exports = {
                     deletedAt: null
                 }
             })
+
+            //update user
             await User.update({
                 email: userprofileUpdateObj.email
             }, {
                 where: {
-                    id: auth.userId
+                    id: userprofileGet.user_id
                 }
             });
 
-            //mendapatkan data userprofile setelah update
-            let userprofileAfterUpdate = await UserProfile.findOne({
+            const userprofileAfterUpdate = await UserProfile.findOne({
                 where: {
                     slug: req.params.slug,
+                    deletedAt: null
                 }
-            })
+            });
 
             await transaction.commit();
             //response menggunakan helper response.formatter
