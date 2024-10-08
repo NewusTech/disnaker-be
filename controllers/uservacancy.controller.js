@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, UserExperience, UserProfile, UserEducationHistory, Role, sequelize, Application, Vacancy, SavedVacancy } = require('../models');
+const { Vacancy, SavedVacancy } = require('../models');
 
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
