@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, UserExperience, UserProfile, UserEducationHistory, Role, sequelize, Application, Vacancy, SavedVacancy } = require('../models');
+const { User, UserExperience, UserProfile, UserCertificate, UserEducationHistory,UserLink, Skill, Role, sequelize, UserOrganization, UserSkill } = require('../models');
 
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
@@ -177,11 +177,13 @@ module.exports = {
                 where: { id: auth.userId },
                 attributes: ['id', 'email'],
                 include: [
-                    {
-                        model: UserProfile,
-                    },
+                    { model: UserProfile},
                     { model: UserExperience },
                     { model: UserEducationHistory },
+                    { model: UserOrganization },
+                    { model: Skill },
+                    { model: UserCertificate },
+                    { model: UserLink },
                 ]
             });
 
@@ -427,6 +429,7 @@ module.exports = {
                 birthDate: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}$/, optional: true },
                 maritalStatus: { type: "string", optional: true },
                 gender: { type: "string", optional: true },
+                location: { type: "string", optional: true },
                 profession: { type: "string", optional: true },
                 pendidikan: { type: "number", optional: true },
             }
@@ -442,6 +445,7 @@ module.exports = {
                 phoneNumber: req.body.phoneNumber,
                 address: req.body.address,
                 religion: req.body.religion,
+                location: req.body.location,
                 maritalStatus: req.body.maritalStatus,
                 gender: req.body.gender,
                 profession: req.body.profession,
