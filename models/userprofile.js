@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     portfolio: DataTypes.STRING,
     birthPlace: DataTypes.STRING,
     religion: DataTypes.STRING,
+    location: DataTypes.STRING,
     profession: DataTypes.STRING,
     image: DataTypes.STRING,
     employmentStatus: DataTypes.ENUM('Sudah Bekerja', 'Siap Bekerja', 'Tidak Bekerja'),

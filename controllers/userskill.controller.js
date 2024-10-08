@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Skill, UserEducationHistory, sequelize ,UserSkill } = require('../models');
+const { User, Skill, UserEducationHistory, sequelize, UserSkill } = require('../models');
 
 const Validator = require("fastest-validator");
 const v = new Validator();
@@ -22,46 +22,50 @@ const s3Client = new S3Client({
 
 module.exports = {
   createUserSkill: async (req, res) => {
-      const { skills } = req.body; 
-      try {
-        // Cek apakah user ada
-        const user = await User.findByPk(auth.userId);
-        if (!user) {
-          return res.status(404).json({ message: 'User not found' });
-        }
-
-        const userskills = {};
-
-        for (const skillId of skills) {
-          let skill = await Skill.findOne({ where: { id: skillId } });
-        
-          // Jika skill belum ada, kirimkan response bahwa skill tidak ditemukan
-          if (!skill) {
-            return res.status(404).json({ message: 'Skill not found' });
-          }
-        
-          userskills.push({
-            user_id: auth.userId,
-            skill_id: skill.id
-          });
-        }
-
-        // Hapus semua skill lama dari UserSkill
-        await UserSkill.destroy({ where: { user_id: user.id } });
-
-        // Tambahkan skill baru ke UserSkill
-        for (const skillId of skillIds) {
-          await UserSkills.create({ user_id: userId, skill_id: skillId });
-        }
-
-        return res.status(200).json({ message: 'User skills updated successfully' });
-      } catch (error) {
-        logger.error(`Error : ${error}`);
-        logger.error(`Error message: ${error.message}`);
-        console.error('Error updating user skills:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+    const { skills } = req.body;
+    try {
+      // Cek apakah user ada
+      const user = await User.findByPk(auth.userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
       }
-    },
+
+      const tempSkills = [];
+
+      // Proses setiap skill yang dikirim dari frontend
+      for (const skillId of skills) {
+        let skill = await Skill.findOne({ where: { id: skillId } });
+
+        // Jika skill belum ada, kirimkan response bahwa skill tidak ditemukan
+        if (!skill) {
+          return res.status(404).json({ message: 'Skill not found' });
+        }
+
+        tempSkills.push({
+          user_id: auth.userId,
+          skill_id: skill.id
+        });
+      }
+
+      // Step 1: Hapus semua UserSkill yang sudah ada untuk user_id
+      await UserSkill.destroy({
+        where: { user_id: auth.userId }
+      });
+
+      // Step 2: Insert ulang semua skill dari tempSkills
+      for (const tempSkill of tempSkills) {
+        await UserSkill.create({ user_id: tempSkill.user_id, skill_id: tempSkill.skill_id });
+      }
+
+      return res.status(200).json(response(200, 'success save user skill'));
+
+    } catch (error) {
+      logger.error(`Error : ${error}`);
+      logger.error(`Error message: ${error.message}`);
+      console.error('Error updating user skills:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  },
   getUserSkill: async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;

@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
       Skill.hasMany(models.VacancySkill, {
         foreignKey: 'skill_id',
       });
+      Skill.belongsToMany(models.User, {
+        through: 'UserSkill',
+        foreignKey: 'skill_id'
+      })
     }
   }
   Skill.init({

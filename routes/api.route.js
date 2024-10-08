@@ -13,6 +13,7 @@ const usereducationRoute = require('./usereducation.route');
 const userorganizationRoute = require('./userorganization.route');
 const userexperienceRoute = require('./userexperience.route');
 const usercertificateRoute = require('./usercertificate.route');
+const userskillRoute = require('./userskill.route');
 
 module.exports = function (app, urlApi) {
     app.use(urlApi, artikelRoute);
@@ -29,4 +30,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, userorganizationRoute);
     app.use(urlApi, userexperienceRoute);
     app.use(urlApi, usercertificateRoute);
+    app.use(urlApi, userskillRoute);
 }
