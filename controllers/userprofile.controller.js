@@ -10,7 +10,6 @@ const { generatePagination } = require('../pagination/pagination');
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const logger = require('../errorHandler/logger');
-const vacancy = require('../models/vacancy');
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -234,35 +233,6 @@ module.exports = {
             console.log(err);
         }
     },
-    getUserApplications: async (req, res) => {
-        try {
-            let whereCondition = { user_id: auth.userId };
-
-            if (req.query.status) {
-                whereCondition.status = { [Op.eq]: req.query.status };
-            }
-
-            const userWithApplications = await Application.findAll({
-                where: whereCondition,
-                include: [{
-                    model: Vacancy, // Include Vacancy relation in the result
-                }]
-            });
-
-            if (!userWithApplications || userWithApplications.length === 0) {
-                res.status(404).json(response(404, 'Applications not found'));
-                return;
-            }
-            // Success response
-            res.status(200).json(response(200, 'success get user with Applications', userWithApplications));
-        } catch (error) {
-            // Log error details and send 500 response
-            logger.error(`Error : ${error}`);
-            logger.error(`Error message: ${error.message}`);
-            console.error('Error fetching user applications:', error);
-            res.status(500).json(response(500, 'internal server error', error));
-        }
-    },
     //create data
     createuserprofile: async (req, res) => {
         const transaction = await sequelize.transaction();
@@ -426,58 +396,6 @@ module.exports = {
         }
     },
 
-    savevacancy: async (req, res) => {
-        try {
-
-            //membuat schema untuk validasi
-            const schema = {
-                user_id: { type: "number", min: 1, optional: false },
-                vacancy_id: { type: "number", min: 1, optional: false }
-            }
-
-            //buat object savedVacancy
-            let savedVacancyCreateObj = {
-                user_id: auth.userId,
-                vacancy_id: parseInt(req.body.vacancy_id),
-            }
-
-            //validasi menggunakan module fastest-validator
-            const validate = v.validate(savedVacancyCreateObj, schema);
-            if (validate.length > 0) {
-                res.status(400).json(response(400, 'validation failed', validate));
-                return;
-            }
-
-            //buat savedVacancy
-            let savedVacancyCreate = await SavedVacancy.create(savedVacancyCreateObj);
-
-            //response menggunakan helper response.formatter
-            res.status(201).json(response(201, 'success create savedVacancy', savedVacancyCreate));
-        } catch (err) {
-            logger.error(`Error : ${err}`);
-            logger.error(`Error message: ${err.message}`);
-            res.status(500).json(response(500, 'internal server error', err));
-        }
-    },
-    getsavedVacancy: async (req, res) => {
-        try {
-            const savedVacancyGets = await SavedVacancy.findAll({
-                where: {
-                    user_id: auth.userId
-                },
-                include: [{ model: Vacancy }]
-            });
-
-            //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get savedVacancy', savedVacancyGets));
-        } catch (err) {
-            logger.error(`Error : ${err}`);
-            logger.error(`Error message: ${err.message}`);
-            res.status(500).json(response(500, 'internal server error', err));
-        }
-    },
-
-    //update data person
     //user update sendiri
     updateuserprofile: async (req, res) => {
         const transaction = await sequelize.transaction();
@@ -631,6 +549,64 @@ module.exports = {
             })
 
             res.status(200).json(response(200, 'success update userprofile', userprofileAfterUpdate));
+        } catch (error) {
+            logger.error(`Error : ${error}`);
+            logger.error(`Error message: ${error.message}`);
+            console.log(err);
+            res.status(500).json(response(500, 'internal server error', err));
+        }
+    },
+
+    updateImageProfile: async (req, res) => {
+        try {
+            const user = await UserProfile.findOne({ where: { slug: req.params.slug } });
+
+            if (!user) {
+                res.status(404).json(response(404, 'user profile not found'));
+                return;
+            }
+
+            //membuat schema untuk validasi
+            const schema = {
+                image: { type: 'string', optional: false },
+            }
+
+            let userprofileUpdateObj = {
+                image: req.body.image
+            };
+
+            if (req.file) {
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `${process.env.PATH_AWS}/profile/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
+
+                const command = new PutObjectCommand(uploadParams);
+
+                await s3Client.send(command);
+
+                userprofileUpdateObj.image = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+            }
+
+            const validate = v.validate(userprofileUpdateObj, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            //update userprofile
+            await UserProfile.update(userprofileUpdateObj, { where: { slug: req.params.slug } });
+
+            //mendapatkan data userprofile setelah update
+            const userprofileAfterUpdate = await UserProfile.findOne({ where: { slug: req.params.slug } })
+            res.status(200).json(response(200, 'success update user profile', userprofileAfterUpdate));
+
         } catch (error) {
             logger.error(`Error : ${error}`);
             logger.error(`Error message: ${error.message}`);
