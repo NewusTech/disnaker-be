@@ -203,12 +203,16 @@ module.exports = {
                 return;
             }
 
+            let userData = user.get({ plain: true });
+
             return res.status(200).json({
                 status: 200,
                 message: "success get user profile",
-                data: user,
-                favoriteCount: favoriteCount,
-                applicationCount: applicationCount
+                data: {
+                    ...userData,
+                    favoriteCount,
+                    applicationCount
+                },
             });
         } catch (error) {
             logger.error(`Error : ${error}`);
