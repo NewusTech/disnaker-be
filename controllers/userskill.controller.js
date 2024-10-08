@@ -7,7 +7,7 @@ const v = new Validator();
 const { Op, where } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, InventoryIncludedObjectVersions } = require("@aws-sdk/client-s3");
 const logger = require('../errorHandler/logger');
 const vacancy = require('../models/vacancy');
 
@@ -68,39 +68,23 @@ module.exports = {
   },
   getUserSkill: async (req, res) => {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      const offset = (page - 1) * limit;
-
-      // Kondisi where untuk pencarian dan filter
-      const whereCondition = {
-        user_id: auth.userId
-      };
 
       // Menggunakan Promise.all untuk mendapatkan data dan total count secara paralel
-      const [usereducationGets, totalCount] = await Promise.all([
-        UserEducationHistory.findAll({
-          where: whereCondition,
-          limit: limit,
-          offset: offset
-        }),
-        UserEducationHistory.count({
-          where: whereCondition
-        })
-      ]);
+      const user = await User.findOne({
+        where: { id: auth.userId },
+        include: [{ model: Skill }],
+      });
 
-      if (usereducationGets.length === 0) {
-        return res.status(404).json(response(404, 'user education not found'));
+      if (!user) {
+        return res.status(404).json(response(404, 'user not found'));
       }
 
-      // Buat pagination
-      const pagination = generatePagination(totalCount, page, limit, '/api/usereducation/get');
+      const userSkills = user.Skills;
 
       res.status(200).json({
         status: 200,
-        message: 'success get user education',
-        data: usereducationGets,
-        pagination: pagination
+        message: 'success get user skills',
+        data: userSkills,
       });
     } catch (err) {
       logger.error(`Error : ${err}`);
