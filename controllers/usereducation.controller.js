@@ -23,8 +23,6 @@ const s3Client = new S3Client({
 
 module.exports = {
   createusereducation: async (req, res) => {
-    const transaction = await sequelize.transaction();
-
     try {
 
       // Membuat schema untuk validasi
@@ -42,43 +40,44 @@ module.exports = {
 
       if (req.files) {
         if (req.files.fileIjazah) {
-            const timestamp = new Date().getTime();
-            const uniqueFileName = `${timestamp}-${req.files.fileIjazah[0].originalname}`;
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${req.files.fileIjazah[0].originalname}`;
 
-            const uploadParams = {
-                Bucket: process.env.AWS_S3_BUCKET,
-                Key: `${process.env.PATH_AWS}/file/fileIjazah/${uniqueFileName}`,
-                Body: req.files.fileIjazah[0].buffer,
-                ACL: 'public-read',
-                ContentType: req.files.fileIjazah[0].mimetype
-            };
+          const uploadParams = {
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: `${process.env.PATH_AWS}/file/fileIjazah/${uniqueFileName}`,
+            Body: req.files.fileIjazah[0].buffer,
+            ACL: 'public-read',
+            ContentType: req.files.fileIjazah[0].mimetype
+          };
 
-            const command = new PutObjectCommand(uploadParams);
+          const command = new PutObjectCommand(uploadParams);
 
-            await s3Client.send(command);
+          await s3Client.send(command);
 
-            req.body.fileIjazah = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+          req.body.fileIjazah = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
         }
         if (req.files.fileTranskrip) {
-            const timestamp = new Date().getTime();
-            const uniqueFileName = `${timestamp}-${req.files.fileTranskrip[0].originalname}`;
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${req.files.fileTranskrip[0].originalname}`;
 
-            const uploadParams = {
-                Bucket: process.env.AWS_S3_BUCKET,
-                Key: `${process.env.PATH_AWS}/file/transkrip/${uniqueFileName}`,
-                Body: req.files.fileTranskrip[0].buffer,
-                ACL: 'public-read',
-                ContentType: req.files.fileTranskrip[0].mimetype
-            };
-            const command = new PutObjectCommand(uploadParams);
+          const uploadParams = {
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: `${process.env.PATH_AWS}/file/transkrip/${uniqueFileName}`,
+            Body: req.files.fileTranskrip[0].buffer,
+            ACL: 'public-read',
+            ContentType: req.files.fileTranskrip[0].mimetype
+          };
+          const command = new PutObjectCommand(uploadParams);
 
-            await s3Client.send(command);
-            req.body.fileTranskrip = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+          await s3Client.send(command);
+          req.body.fileTranskrip = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
         }
-    }
+      }
 
       // Buat object userprofile
       let userEducationObj = {
+        user_id: auth.userId,
         educationLevel_id: Number(req.body.educationLevel_id),
         instanceName: req.body.instanceName,
         department: req.body.department,
@@ -182,6 +181,138 @@ module.exports = {
       }
 
       res.status(200).json(response(200, 'success get user education', usereducationGet));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
+
+  updateusereducation: async (req, res) => {
+    try {
+      const whereCondition = { id: req.params.id }
+
+      let usereducationGet = await UserEducationHistory.findOne({
+        where: whereCondition
+      });
+
+      if (!usereducationGet) {
+        return res.status(404).json(response(404, 'user education not found'));
+      }
+      
+      // Membuat schema untuk validasi
+      const schema = {
+        educationLevel_id: { type: "number", optional: false },
+        instanceName: { type: "string", optional: true },
+        department: { type: "string", optional: true },
+        gpa: { type: "number", optional: true },
+        joinDate: { type: "string", optional: true },
+        graduationDate: { type: "string", optional: true },
+        desc: { type: "string", optional: true },
+        ijazah: { type: "string", optional: true },
+        transkrip: { type: "string", optional: true }
+      }
+
+      if (req.files) {
+        if (req.files.fileIjazah) {
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${req.files.fileIjazah[0].originalname}`;
+
+          const uploadParams = {
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: `${process.env.PATH_AWS}/file/fileIjazah/${uniqueFileName}`,
+            Body: req.files.fileIjazah[0].buffer,
+            ACL: 'public-read',
+            ContentType: req.files.fileIjazah[0].mimetype
+          };
+
+          const command = new PutObjectCommand(uploadParams);
+
+          await s3Client.send(command);
+
+          req.body.fileIjazah = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }
+        if (req.files.fileTranskrip) {
+          const timestamp = new Date().getTime();
+          const uniqueFileName = `${timestamp}-${req.files.fileTranskrip[0].originalname}`;
+
+          const uploadParams = {
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: `${process.env.PATH_AWS}/file/transkrip/${uniqueFileName}`,
+            Body: req.files.fileTranskrip[0].buffer,
+            ACL: 'public-read',
+            ContentType: req.files.fileTranskrip[0].mimetype
+          };
+          const command = new PutObjectCommand(uploadParams);
+
+          await s3Client.send(command);
+          req.body.fileTranskrip = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }
+      }
+
+      // Buat object userprofile
+      let userEducationObj = {
+        educationLevel_id: Number(req.body.educationLevel_id),
+        instanceName: req.body.instanceName,
+        department: req.body.department,
+        gpa: req.body.gpa ? Number(req.body.gpa) : null,
+        joinDate: req.body.joinDate,
+        graduationDate: req.body.graduationDate,
+        desc: req.body.desc,
+        ijazah: req.body.fileIjazah,
+        transkrip: req.body.fileTranskrip
+      };
+
+      // Validasi menggunakan module fastest-validator
+      const validate = v.validate(userEducationObj, schema);
+      if (validate.length > 0) {
+        // Format pesan error dalam bahasa Indonesia
+        const errorMessages = validate.map(error => {
+          if (error.type === 'stringMin') {
+            return `Field ${error.field} minimal ${error.expected} karakter`;
+          } else if (error.type === 'stringMax') {
+            return `Field ${error.field} maksimal ${error.expected} karakter`;
+          } else if (error.type === 'stringPattern') {
+            return `Field ${error.field} format tidak valid`;
+          } else {
+            return `Field ${error.field} tidak valid`;
+          }
+        });
+
+        res.status(400).json({
+          status: 400,
+          message: errorMessages.join(', ')
+        });
+        return;
+      }
+
+      // update user education
+      let userEducationCreate = await UserEducationHistory.update(userEducationObj, {
+        where: whereCondition
+      });
+
+      const userEducation = await UserEducationHistory.findOne({
+        where: whereCondition
+      });
+
+      res.status(200).json(response(200, 'success update userprofile', userEducation));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
+
+  deleteusereducation: async (req, res) => {
+    try {
+      let userprofileDelete = await UserEducationHistory.destroy({
+        where: { id: req.params.id }
+      });
+      if (!userprofileDelete) {
+        return res.status(404).json(response(404, 'user profile not found'));
+      }
+      res.status(200).json(response(200, 'success delete userprofile'));
     } catch (err) {
       logger.error(`Error : ${err}`);
       logger.error(`Error message: ${err.message}`);
