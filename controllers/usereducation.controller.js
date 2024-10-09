@@ -190,7 +190,16 @@ module.exports = {
 
   updateusereducation: async (req, res) => {
     try {
+      const whereCondition = { id: req.params.id }
 
+      let usereducationGet = await UserEducationHistory.findOne({
+        where: whereCondition
+      });
+
+      if (!usereducationGet) {
+        return res.status(404).json(response(404, 'user education not found'));
+      }
+      
       // Membuat schema untuk validasi
       const schema = {
         educationLevel_id: { type: "number", optional: false },
@@ -279,11 +288,11 @@ module.exports = {
 
       // update user education
       let userEducationCreate = await UserEducationHistory.update(userEducationObj, {
-        where: { id: req.params.id }
+        where: whereCondition
       });
 
       const userEducation = await UserEducationHistory.findOne({
-        where: { id: req.params.id }
+        where: whereCondition
       });
 
       res.status(200).json(response(200, 'success update userprofile', userEducation));
