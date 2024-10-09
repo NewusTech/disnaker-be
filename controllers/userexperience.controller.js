@@ -88,62 +88,80 @@ module.exports = {
   },
   getUserExperience: async (req, res) => {
     try {
-        let { search, start_date, end_date } = req.query;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
+      let { search, start_date, end_date } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
 
-        // Kondisi where untuk pencarian dan filter
-        const whereCondition = {
-            user_id: auth.userId
-        };
+      // Kondisi where untuk pencarian dan filter
+      const whereCondition = {
+        user_id: auth.userId
+      };
 
-        if (search) {
-            whereCondition[Op.or] = [
-                { title: { [Op.iLike]: `%${search}%` } },
-                { companyName: { [Op.iLike]: `%${search}%` } },
-                { possition: { [Op.iLike]: `%${search}%` } }
-            ];
-        }
+      if (search) {
+        whereCondition[Op.or] = [
+          { title: { [Op.iLike]: `%${search}%` } },
+          { companyName: { [Op.iLike]: `%${search}%` } },
+          { possition: { [Op.iLike]: `%${search}%` } }
+        ];
+      }
 
-        if (start_date && end_date) {
-            whereCondition.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
-        } else if (start_date) {
-            whereCondition.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
-        } else if (end_date) {
-            whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
-        }
+      if (start_date && end_date) {
+        whereCondition.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
+      } else if (start_date) {
+        whereCondition.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
+      } else if (end_date) {
+        whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
+      }
 
-        // Menggunakan Promise.all untuk mendapatkan data dan total count secara paralel
-        const [userexperienceGets, totalCount] = await Promise.all([
-            UserExperience.findAll({
-                where: whereCondition,
-                limit: limit,
-                offset: offset
-            }),
-            UserExperience.count({
-                where: whereCondition
-            })
-        ]);
+      // Menggunakan Promise.all untuk mendapatkan data dan total count secara paralel
+      const [userexperienceGets, totalCount] = await Promise.all([
+        UserExperience.findAll({
+          where: whereCondition,
+          limit: limit,
+          offset: offset
+        }),
+        UserExperience.count({
+          where: whereCondition
+        })
+      ]);
 
-        if (userexperienceGets.length === 0) {
-            return res.status(404).json(response(404, 'user experience not found'));
-        }
+      if (userexperienceGets.length === 0) {
+        return res.status(404).json(response(404, 'user experience not found'));
+      }
 
-        // Buat pagination
-        const pagination = generatePagination(totalCount, page, limit, '/api/userexperience/get');
+      // Buat pagination
+      const pagination = generatePagination(totalCount, page, limit, '/api/userexperience/get');
 
-        res.status(200).json({
-            status: 200,
-            message: 'success get user experience',
-            data: userexperienceGets,
-            pagination: pagination
-        });
+      res.status(200).json({
+        status: 200,
+        message: 'success get user experience',
+        data: userexperienceGets,
+        pagination: pagination
+      });
     } catch (err) {
-        logger.error(`Error : ${err}`);
-        logger.error(`Error message: ${err.message}`);
-        res.status(500).json(response(500, 'internal server error', err));
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
     }
-}
+  },
+  getUserExperienceById: async (req, res) => {
+    try {
+      const whereCondition = {
+        id: req.params.id
+      };
+      const userexperienceGet = await UserExperience.findOne({
+        where: whereCondition
+      });
+      if (!userexperienceGet) {
+        return res.status(404).json(response(404, 'user experience not found'));
+      }
+      res.status(200).json(response(200, 'success get user experience', userexperienceGet));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
 
 }

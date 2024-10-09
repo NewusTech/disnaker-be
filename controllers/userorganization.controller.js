@@ -83,50 +83,68 @@ module.exports = {
 
   getOrganization: async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
-        let userOrganizationGets;
-        let totalCount;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
+      let userOrganizationGets;
+      let totalCount;
 
-        const whereCondition = {
-            user_id: auth.userId
-        };
+      const whereCondition = {
+        user_id: auth.userId
+      };
 
-        [userOrganizationGets, totalCount] = await Promise.all([
-            UserOrganization.findAll({
-                where: whereCondition,
-                limit: limit,
-                offset: offset
-            }),
-            UserOrganization.count({
-                where: whereCondition
-            })
-        ]);
+      [userOrganizationGets, totalCount] = await Promise.all([
+        UserOrganization.findAll({
+          where: whereCondition,
+          limit: limit,
+          offset: offset
+        }),
+        UserOrganization.count({
+          where: whereCondition
+        })
+      ]);
 
-        // Generate pagination (misal menggunakan fungsi pagination yang sama seperti di getArtikel)
-        const pagination = generatePagination(totalCount, page, limit, '/api/user/organization/get');
+      // Generate pagination (misal menggunakan fungsi pagination yang sama seperti di getArtikel)
+      const pagination = generatePagination(totalCount, page, limit, '/api/user/organization/get');
 
-        // Jika tidak ada data
-        if (!userOrganizationGets || userOrganizationGets.length === 0) {
-            res.status(404).json(response(404, 'user organization not found'));
-            return;
-        }
+      // Jika tidak ada data
+      if (!userOrganizationGets || userOrganizationGets.length === 0) {
+        res.status(404).json(response(404, 'user organization not found'));
+        return;
+      }
 
-        // Jika berhasil mendapatkan data
-        res.status(200).json({
-            status: 200,
-            message: 'success get user organization',
-            data: userOrganizationGets,
-            pagination: pagination
-        });
+      // Jika berhasil mendapatkan data
+      res.status(200).json({
+        status: 200,
+        message: 'success get user organization',
+        data: userOrganizationGets,
+        pagination: pagination
+      });
 
     } catch (err) {
-        logger.error(`Error: ${err}`);
-        logger.error(`Error: ${err.message}`);
-        res.status(500).json(response(500, 'internal server error', err));
-        console.log(err);
+      logger.error(`Error: ${err}`);
+      logger.error(`Error: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
     }
-}
+  },
+  getUserOrganizationById: async (req, res) => {
+    try {
+      const whereCondition = {
+        id: req.params.id
+      };
+      const userOrganizationGets = await UserOrganization.findOne({
+        where: whereCondition
+      });
+      if (!userOrganizationGets) {
+        return res.status(404).json(response(404, 'user organization not found'));
+      }
+      res.status(200).json(response(200, 'success get user organization', userOrganizationGets));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
 
 }
