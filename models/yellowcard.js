@@ -19,8 +19,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       unique: true
     },
-    kelurahan_id: DataTypes.INTEGER,
-    kecamatan_id: DataTypes.INTEGER,
+    provinsi: DataTypes.STRING,
+    kabupaten: DataTypes.STRING,
+    kecamatan: DataTypes.STRING,
+    kelurahan: DataTypes.STRING,
     educationLevel_id: DataTypes.INTEGER,
     job: DataTypes.STRING,
     skill: DataTypes.TEXT,
