@@ -171,6 +171,9 @@ module.exports = {
       const whereCondition = {
         id: req.params.id
       };
+      if(auth.role === 'User'){
+        whereCondition.user_id = auth.userId
+      }
 
       let usereducationGet = await UserEducationHistory.findOne({
         where: whereCondition
