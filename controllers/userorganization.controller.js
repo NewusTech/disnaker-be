@@ -37,7 +37,8 @@ module.exports = {
       }
 
       // Buat object userprofile
-      let userEducationObj = {
+      let userOrg = {
+        user_id: auth.userId,
         name: req.body.position,
         organizationName: req.body.organizationName,
         joinDate: req.body.joinDate,
@@ -47,7 +48,7 @@ module.exports = {
       };
 
       // Validasi menggunakan module fastest-validator
-      const validate = v.validate(userEducationObj, schema);
+      const validate = v.validate(userOrg, schema);
       if (validate.length > 0) {
         // Format pesan error dalam bahasa Indonesia
         const errorMessages = validate.map(error => {
@@ -70,7 +71,7 @@ module.exports = {
       }
 
       // create user education
-      let userOrgCreate = await UserOrganization.create(userEducationObj)
+      let userOrgCreate = await UserOrganization.create(userOrg)
 
       res.status(200).json(response(200, 'success create userprofile', userOrgCreate));
     } catch (err) {
@@ -140,6 +141,88 @@ module.exports = {
         return res.status(404).json(response(404, 'user organization not found'));
       }
       res.status(200).json(response(200, 'success get user organization', userOrganizationGets));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
+
+  updateOrganization: async (req, res) => {
+    try {
+      const userOrg = await UserOrganization.findOne({
+        where: { id: req.params.id }
+      });
+      if (!userOrg) {
+        return res.status(404).json(response(404, 'user organization not found'));
+      }
+      // Membuat schema untuk validasi
+      const schema = {
+        name: { type: "string", optional: false },
+        organizationName: { type: "string", optional: false },
+        desc: { type: "string", optional: true },
+        joinDate: { type: "string", optional: true },
+        leaveDate: { type: "string", optional: true },
+        isCurrently: { type: "string", optional: true }
+      }
+
+      // Buat object userprofile
+      let userorganizationObj = {
+        name: req.body.position,
+        organizationName: req.body.organizationName,
+        joinDate: req.body.joinDate,
+        leaveDate: req.body.leaveDate,
+        isCurrently: req.body.isCurrently,
+        desc: req.body.desc
+      };
+
+      // Validasi menggunakan module fastest-validator
+      const validate = v.validate(userorganizationObj, schema);
+      if (validate.length > 0) {
+        // Format pesan error dalam bahasa Indonesia
+        const errorMessages = validate.map(error => {
+          if (error.type === 'stringMin') {
+            return `Field ${error.field} minimal ${error.expected} karakter`;
+          } else if (error.type === 'stringMax') {
+            return `Field ${error.field} maksimal ${error.expected} karakter`;
+          } else if (error.type === 'stringPattern') {
+            return `Field ${error.field} format tidak valid`;
+          } else {
+            return `Field ${error.field} tidak valid`;
+          }
+        });
+
+        res.status(400).json({
+          status: 400,
+          message: errorMessages.join(', ')
+        });
+        return;
+      }
+
+      // create user education
+      await UserOrganization.update(userorganizationObj, { where: { id: req.params.id } });
+
+      const userOrgUpdated = await UserOrganization.findOne({ where: { id: req.params.id } });
+
+      res.status(200).json(response(200, 'success create userprofile', userOrgUpdated));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
+
+  deleteOrganization: async (req, res) => {
+    try {
+      const userOrg = await UserOrganization.findOne({
+        where: { id: req.params.id }
+      });
+      if (!userOrg) {
+        return res.status(404).json(response(404, 'user organization not found'));
+      }
+      await UserOrganization.destroy({ where: { id: req.params.id } });
+      res.status(200).json(response(200, 'success delete user organization'));
     } catch (err) {
       logger.error(`Error: ${err}`);
       logger.error(`Error message: ${err.message}`);
