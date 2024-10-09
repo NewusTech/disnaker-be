@@ -23,7 +23,9 @@ module.exports = (sequelize, DataTypes) => {
     gpa: DataTypes.DECIMAL,
     joinDate: DataTypes.DATEONLY,
     graduationDate: DataTypes.DATEONLY,
-    desc: DataTypes.TEXT
+    desc: DataTypes.TEXT,
+    ijazah: DataTypes.STRING,
+    transkrip: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'UserEducationHistory',
