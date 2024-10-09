@@ -145,6 +145,25 @@ module.exports = {
       console.error('Error fetching user applications:', error);
       res.status(500).json(response(500, 'internal server error', error));
     }
-  }
+  },
+
+  getUserUserCertificatesById: async (req, res) => {
+    try {
+      const whereCondition = {
+        id: req.params.id
+      };
+      const usercertificate = await UserCertificate.findOne({
+        where: whereCondition
+      });
+      if (!usercertificate) {
+        return res.status(404).json(response(404, 'user certificate not found'));
+      }
+      res.status(200).json(response(200, 'success get user certificate', usercertificate));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
 
 }

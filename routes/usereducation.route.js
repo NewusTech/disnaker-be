@@ -12,4 +12,5 @@ const multipleUpload = upload.fields([{ name: 'fileIjazah', maxCount: 1 }, { nam
 
 route.post('/user/education/create', [mid.checkRolesAndLogout(['User'])], multipleUpload, usereducationController.createusereducation);
 route.get('/user/education/get', [mid.checkRolesAndLogout(['User'])], usereducationController.getusereducation);
+route.get('/user/education/get/:id', [mid.checkRolesAndLogout(['User'])], usereducationController.getusereducationById);
 module.exports = route;

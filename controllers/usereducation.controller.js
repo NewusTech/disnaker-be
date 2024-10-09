@@ -165,6 +165,28 @@ module.exports = {
       logger.error(`Error message: ${err.message}`);
       res.status(500).json(response(500, 'internal server error', err));
     }
+  },
+
+  getusereducationById: async (req, res) => {
+    try {
+      const whereCondition = {
+        id: req.params.id
+      };
+
+      let usereducationGet = await UserEducationHistory.findOne({
+        where: whereCondition
+      });
+
+      if (!usereducationGet) {
+        return res.status(404).json(response(404, 'user education not found'));
+      }
+
+      res.status(200).json(response(200, 'success get user education', usereducationGet));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
   }
 
 }
