@@ -9,14 +9,14 @@ const multer = require('multer');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+const multipleUpload = upload.fields([{ name: 'ktp', maxCount: 1 }, { name: 'kk', maxCount: 1 }]);
 
 route.get('/user/profile/get', [mid.checkRolesAndLogout(['User'])], userprofileController.getUserProfile);
 // route.delete('/userprofile/delete/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userprofileController.deleteuser);
 
 // route.post('/userprofile/create', [mid.checkRolesAndLogout(['Super Admin'])], userprofileController.createuserprofile); 
-route.put('/user/profile/update/:slug', [mid.checkRolesAndLogout(['User'])], userprofileController.updateuserprofile);
+route.put('/user/profile/update/:slug', [mid.checkRolesAndLogout(['User'])], multipleUpload, userprofileController.updateuserprofile);
 route.put('/user/about/update/:slug', [mid.checkRolesAndLogout(['User'])], userprofileController.updateaboutuser);
-route.post('/user/education/create', [mid.checkRolesAndLogout(['User'])], userprofileController.createusereducation);
 route.put('/user/image-profile/update/:slug', [mid.checkRolesAndLogout(['User'])], upload.single('image'), userprofileController.updateImageProfile);
 // route.put('/userprofile/updatefoto/:slug', [mid.checkRolesAndLogout(['Super Admin'])], upload.single('fotoprofil'), userprofileController.updateprofil); 
 

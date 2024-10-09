@@ -35,18 +35,59 @@ module.exports = {
         gpa: { type: "number", optional: true },
         joinDate: { type: "string", optional: true },
         graduationDate: { type: "string", optional: true },
-        desc: { type: "string", optional: true }
+        desc: { type: "string", optional: true },
+        ijazah: { type: "string", optional: true },
+        transkrip: { type: "string", optional: true }
       }
+
+      if (req.files) {
+        if (req.files.fileIjazah) {
+            const timestamp = new Date().getTime();
+            const uniqueFileName = `${timestamp}-${req.files.fileIjazah[0].originalname}`;
+
+            const uploadParams = {
+                Bucket: process.env.AWS_S3_BUCKET,
+                Key: `${process.env.PATH_AWS}/file/fileIjazah/${uniqueFileName}`,
+                Body: req.files.fileIjazah[0].buffer,
+                ACL: 'public-read',
+                ContentType: req.files.fileIjazah[0].mimetype
+            };
+
+            const command = new PutObjectCommand(uploadParams);
+
+            await s3Client.send(command);
+
+            req.body.fileIjazah = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }
+        if (req.files.fileTranskrip) {
+            const timestamp = new Date().getTime();
+            const uniqueFileName = `${timestamp}-${req.files.fileTranskrip[0].originalname}`;
+
+            const uploadParams = {
+                Bucket: process.env.AWS_S3_BUCKET,
+                Key: `${process.env.PATH_AWS}/file/transkrip/${uniqueFileName}`,
+                Body: req.files.fileTranskrip[0].buffer,
+                ACL: 'public-read',
+                ContentType: req.files.fileTranskrip[0].mimetype
+            };
+            const command = new PutObjectCommand(uploadParams);
+
+            await s3Client.send(command);
+            req.body.fileTranskrip = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+        }
+    }
 
       // Buat object userprofile
       let userEducationObj = {
-        educationLevel_id: req.body.educationLevel_id,
+        educationLevel_id: Number(req.body.educationLevel_id),
         instanceName: req.body.instanceName,
         department: req.body.department,
-        gpa: req.body.gpa,
+        gpa: Number(req.body.gpa),
         joinDate: req.body.joinDate,
         graduationDate: req.body.graduationDate,
-        desc: req.body.desc
+        desc: req.body.desc,
+        ijazah: req.body.fileIjazah,
+        transkrip: req.body.fileTranskrip
       };
 
       // Validasi menggunakan module fastest-validator

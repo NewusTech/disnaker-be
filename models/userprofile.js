@@ -34,6 +34,8 @@ module.exports = (sequelize, DataTypes) => {
     location: DataTypes.STRING,
     profession: DataTypes.STRING,
     image: DataTypes.STRING,
+    kk: DataTypes.STRING,
+    ktp: DataTypes.STRING,
     employmentStatus: DataTypes.ENUM('Sudah Bekerja', 'Siap Bekerja', 'Tidak Bekerja'),
     maritalStatus: DataTypes.ENUM('Menikah', 'Belum Menikah'),
     citizenship: DataTypes.ENUM('WNI', 'WNA'),

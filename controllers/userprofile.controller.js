@@ -452,8 +452,48 @@ module.exports = {
                 gender: { type: "string", optional: true },
                 employmentStatus: {type: "enum", values: ['Sudah Bekerja', 'Siap Bekerja', 'Tidak Bekerja'], optional: true},
                 location: { type: "string", optional: true },
+                ktp: { type: "string", optional: true },
+                kk: { type: "string", optional: true },
+                citizenship: { type: "enum", values: ['WNI', 'WNA'], optional: true, optional: true },
                 profession: { type: "string", optional: true },
                 pendidikan: { type: "number", optional: true },
+            }
+
+            if (req.files) {
+                if (req.files.ktp) {
+                    const timestamp = new Date().getTime();
+                    const uniqueFileName = `${timestamp}-${req.files.ktp[0].originalname}`;
+
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${process.env.PATH_AWS}/file/ktp/${uniqueFileName}`,
+                        Body: req.files.ktp[0].buffer,
+                        ACL: 'public-read',
+                        ContentType: req.files.ktp[0].mimetype
+                    };
+
+                    const command = new PutObjectCommand(uploadParams);
+
+                    await s3Client.send(command);
+
+                    req.body.ktp = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+                }
+                if (req.files.kk) {
+                    const timestamp = new Date().getTime();
+                    const uniqueFileName = `${timestamp}-${req.files.kk[0].originalname}`;
+
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${process.env.PATH_AWS}/file/kk/${uniqueFileName}`,
+                        Body: req.files.kk[0].buffer,
+                        ACL: 'public-read',
+                        ContentType: req.files.kk[0].mimetype
+                    };
+                    const command = new PutObjectCommand(uploadParams);
+
+                    await s3Client.send(command);
+                    req.body.kk = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+                }
             }
 
             //buat object userprofile
@@ -468,6 +508,9 @@ module.exports = {
                 address: req.body.address,
                 religion: req.body.religion,
                 location: req.body.location,
+                ktp: req.body.ktp,
+                kk: req.body.kk,
+                citizenship: req.body.citizenship,
                 employmentStatus: req.body.employmentStatus,
                 maritalStatus: req.body.maritalStatus,
                 gender: req.body.gender,
