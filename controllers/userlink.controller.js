@@ -90,6 +90,25 @@ module.exports = {
       logger.error(`Error message: ${err.message}`);
       res.status(500).json(response(500, 'internal server error', err));
     }
-  }
+  }, 
+
+  getUserLinkById: async (req, res) => {
+    try {
+      const whereCondition = {
+        id: req.params.id
+      };
+      const userLinks = await UserLink.findOne({
+        where: whereCondition
+      });
+      if (!userLinks) {
+        return res.status(404).json(response(404, 'user link not found'));
+      }
+      res.status(200).json(response(200, 'success get user link', userLinks));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
 
 }
