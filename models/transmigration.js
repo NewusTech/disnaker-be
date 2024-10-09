@@ -10,11 +10,14 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Transmigration.hasMany(models.TransmigrationMember, {
+        foreignKey: 'transmigration_id'
+      });
     }
   }
+  
   Transmigration.init({
-    submissionNumber:{
+    submissionNumber: {
       type: DataTypes.STRING,
       unique: true
     },
@@ -23,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
     kelurahan_id: DataTypes.INTEGER,
     provinsi_id: DataTypes.INTEGER,
     kabupaten_id: DataTypes.INTEGER,
-    status:DataTypes.ENUM('Pengajuan', 'Proses', 'Terbit', 'Diterima', 'Ditolak'),
+    status: DataTypes.ENUM('Pengajuan', 'Proses', 'Terbit', 'Diterima', 'Ditolak'),
     kk: DataTypes.STRING
   }, {
     sequelize,
