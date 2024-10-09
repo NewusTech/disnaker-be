@@ -30,5 +30,10 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'UserEducationHistory',
   });
+  UserEducationHistory.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['educationLevel_id', 'DESC']];
+    }
+  });
   return UserEducationHistory;
 };
