@@ -24,7 +24,6 @@ module.exports = {
   createUserSkill: async (req, res) => {
     const { skills } = req.body;
     try {
-      // Cek apakah user ada
       const user = await User.findByPk(auth.userId);
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
@@ -32,11 +31,9 @@ module.exports = {
 
       const tempSkills = [];
 
-      // Proses setiap skill yang dikirim dari frontend
       for (const skillId of skills) {
         let skill = await Skill.findOne({ where: { id: skillId } });
 
-        // Jika skill belum ada, kirimkan response bahwa skill tidak ditemukan
         if (!skill) {
           return res.status(404).json({ message: 'Skill not found' });
         }
@@ -47,12 +44,10 @@ module.exports = {
         });
       }
 
-      // Step 1: Hapus semua UserSkill yang sudah ada untuk user_id
       await UserSkill.destroy({
         where: { user_id: auth.userId }
       });
 
-      // Step 2: Insert ulang semua skill dari tempSkills
       for (const tempSkill of tempSkills) {
         await UserSkill.create({ user_id: tempSkill.user_id, skill_id: tempSkill.skill_id });
       }
@@ -69,7 +64,6 @@ module.exports = {
   getUserSkill: async (req, res) => {
     try {
 
-      // Menggunakan Promise.all untuk mendapatkan data dan total count secara paralel
       const user = await User.findOne({
         where: { id: auth.userId },
         include: [{ model: Skill }],
