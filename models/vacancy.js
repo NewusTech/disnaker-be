@@ -51,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
   });
   Vacancy.addHook('beforeFind', (options) => {
     if (!options.order) {
-      options.order = [['id', 'ASC']];
+      options.order = [['createdAt', 'DESC']];
     }
   });
   return Vacancy;
