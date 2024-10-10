@@ -34,6 +34,7 @@ module.exports = {
         joinDate: { type: "string", optional: true },
         graduationDate: { type: "string", optional: true },
         desc: { type: "string", optional: true },
+        isCurrently: { type: "enum", values: ["true", "false"], optional: true },
         ijazah: { type: "string", optional: true },
         transkrip: { type: "string", optional: true }
       }
@@ -85,6 +86,7 @@ module.exports = {
         joinDate: req.body.joinDate,
         graduationDate: req.body.graduationDate,
         desc: req.body.desc,
+        isCurrently: req.body.isCurrently,
         ijazah: req.body.fileIjazah,
         transkrip: req.body.fileTranskrip
       };
@@ -212,6 +214,7 @@ module.exports = {
         joinDate: { type: "string", optional: true },
         graduationDate: { type: "string", optional: true },
         desc: { type: "string", optional: true },
+        isCurrently: { type: "enum", values: ["true", "false"], optional: true },
         ijazah: { type: "string", optional: true },
         transkrip: { type: "string", optional: true }
       }
@@ -262,6 +265,7 @@ module.exports = {
         joinDate: req.body.joinDate,
         graduationDate: req.body.graduationDate,
         desc: req.body.desc,
+        isCurrently: req.body.isCurrently,
         ijazah: req.body.fileIjazah,
         transkrip: req.body.fileTranskrip
       };
