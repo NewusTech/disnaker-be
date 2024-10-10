@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     gpa: DataTypes.DECIMAL,
     joinDate: DataTypes.DATEONLY,
     graduationDate: DataTypes.DATEONLY,
+    isCurrently: DataTypes.ENUM('true', 'false'),
     desc: DataTypes.TEXT,
     ijazah: DataTypes.STRING,
     transkrip: DataTypes.STRING

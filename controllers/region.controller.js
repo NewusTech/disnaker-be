@@ -32,7 +32,7 @@ module.exports = {
       const whereCondition = {};
 
       if (search) {
-        whereCondition[Op.or] = [{ title: { [Op.iLike]: `%${search}%` } }];
+        whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
       }
 
       if (start_date && end_date) {
@@ -58,7 +58,7 @@ module.exports = {
 
       res.status(200).json({
         status: 200,
-        message: 'success get artikel',
+        message: 'success get provinsi',
         data: provinsiGets,
         pagination: pagination
       });
@@ -82,7 +82,7 @@ module.exports = {
       const whereCondition = {};
 
       if (search) {
-        whereCondition[Op.or] = [{ title: { [Op.iLike]: `%${search}%` } }];
+        whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
       }
 
       if (start_date && end_date) {
@@ -108,7 +108,7 @@ module.exports = {
 
       res.status(200).json({
         status: 200,
-        message: 'success get artikel',
+        message: 'success get kabupaten',
         data: kabupatenGets,
         pagination: pagination
       });
@@ -119,6 +119,106 @@ module.exports = {
       res.status(500).json(response(500, 'internal server error', err));
       console.log(err);
     }
-  }
+  },
+  
+  getKecamatans: async (req, res) => {
+    try {
+      let { start_date, end_date, search } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
+      let kecamatanGets;
+      let totalCount;
 
+      const whereCondition = {};
+
+      if (search) {
+        whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+      }
+
+      if (start_date && end_date) {
+        whereCondition.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
+      } else if (start_date) {
+        whereCondition.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
+      } else if (end_date) {
+        whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
+      }
+
+      [kecamatanGets, totalCount] = await Promise.all([
+        Kecamatan.findAll({
+          where: whereCondition,
+          limit: limit,
+          offset: offset
+        }),
+        Kecamatan.count({
+          where: whereCondition
+        })
+      ]);
+
+      const pagination = generatePagination(totalCount, page, limit, '/api/region/kecamatan/get');
+
+      res.status(200).json({
+        status: 200,
+        message: 'success get kecamatans',
+        data: kecamatanGets,
+        pagination: pagination
+      });
+
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
+  getKelurahans: async (req, res) => {
+    try {
+      let { start_date, end_date, search } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
+      let kelurahanGets;
+      let totalCount;
+
+      const whereCondition = {};
+
+      if (search) {
+        whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+      }
+
+      if (start_date && end_date) {
+        whereCondition.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
+      } else if (start_date) {
+        whereCondition.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
+      } else if (end_date) {
+        whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
+      }
+
+      [kelurahanGets, totalCount] = await Promise.all([
+        Kelurahan.findAll({
+          where: whereCondition,
+          limit: limit,
+          offset: offset
+        }),
+        Kelurahan.count({
+          where: whereCondition
+        })
+      ]);
+
+      const pagination = generatePagination(totalCount, page, limit, '/api/region/kelurahan/get');
+
+      res.status(200).json({
+        status: 200,
+        message: 'success get kelurahans',
+        data: kelurahanGets,
+        pagination: pagination
+      });
+
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  }, 
 }
