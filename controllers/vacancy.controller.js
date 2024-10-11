@@ -103,7 +103,9 @@ module.exports = {
 
   getvacancy: async (req, res) => {
     try {
-      let { start_date, end_date, search, status} = req.query;
+      let { 
+        start_date, end_date, search, status, category_id, workLocation, jobType, educationLevel_id 
+      } = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
@@ -111,7 +113,21 @@ module.exports = {
       let totalCount;
 
       const whereCondition = {};
+      const whereCategory = {};
+      const whereEducationLevel = {};
 
+      if (category_id) {
+        whereCategory.id = { [Op.eq]: Number(category_id) };
+      }
+      if (educationLevel_id) {
+        whereEducationLevel.id = { [Op.eq]: Number(educationLevel_id) };
+      }
+      if (workLocation) {
+        whereCondition.workLocation = { [Op.eq]: workLocation };
+      }
+      if (jobType) {
+        whereCondition.jobType = { [Op.eq]: jobType };
+      }
       if (search) {
         whereCondition[Op.or] = [{ title: { [Op.iLike]: `%${search}%` } }];
       }
@@ -147,7 +163,9 @@ module.exports = {
           include: [
             { model: EducationLevel, attributes: ['id', 'level'] },
             { model: Company, attributes: ['id', 'name', 'imageLogo'] },
-            { model: VacancyCategory, attributes: ['id', 'name'] }
+            {
+              model: VacancyCategory, attributes: ['id', 'name'], where: whereCategory
+            },
           ],
           where: whereCondition,
           limit: limit,
