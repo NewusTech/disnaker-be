@@ -27,5 +27,10 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'UserOrganization',
   });
+  UserOrganization.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['id', 'DESC']];
+    }
+  });
   return UserOrganization;
 };

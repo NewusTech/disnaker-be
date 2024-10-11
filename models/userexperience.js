@@ -29,5 +29,10 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'UserExperience',
   });
+  UserExperience.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['id', 'DESC']];
+    }
+  });
   return UserExperience;
 };

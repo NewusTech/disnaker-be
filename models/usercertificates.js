@@ -27,5 +27,10 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'UserCertificate',
   });
+  UserCertificate.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['id', 'DESC']];
+    }
+  });
   return UserCertificate;
 };
