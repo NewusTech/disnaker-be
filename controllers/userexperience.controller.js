@@ -8,20 +8,8 @@ const v = new Validator();
 const { Op, where, NUMBER } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const logger = require('../errorHandler/logger');
-const vacancy = require('../models/vacancy');
-const { createUser } = require('./user.controller');
-const { up } = require('../migrations/20241010033738-add-field-education-histories');
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-  useAccelerateEndpoint: true
-});
 
 module.exports = {
   createUserExperience: async (req, res) => {

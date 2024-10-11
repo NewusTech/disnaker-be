@@ -152,7 +152,7 @@ module.exports = {
       const whereCondition = {
         id: req.params.id
       };
-      if(auth.role === 'User'){
+      if (auth.role === 'User') {
         whereCondition.user_id = auth.userId
       }
       const usercertificate = await UserCertificate.findOne({
@@ -169,4 +169,107 @@ module.exports = {
     }
   },
 
+  updateUserCertificate: async (req, res) => {
+    try {
+      let whereCondition = {
+        id: Number(req.params.id)
+      }
+
+      if (auth.role === 'User') {
+        whereCondition.user_id = auth.userId
+      }
+
+      const certificate = await UserCertificate.findOne({
+        where: whereCondition
+      });
+
+      if (!certificate) {
+        return res.status(404).json(response(404, 'user certificate not found'));
+      }
+
+      let schema = {
+        user_id: { type: "number", optional: false },
+        name: { type: "string", optional: true },
+        organization: { type: "string", optional: true },
+        file: { type: "string", optional: true },
+        expiredDate: { type: "string", optional: true },
+        isNonExpire: { type: "string", optional: true },
+        desc: { type: "string", optional: true }
+      }
+      const usercertificateObj = {
+        user_id: certificate.user_id,
+        name: req.body.title,
+        organization: req.body.organization,
+        file: req.body.file,
+        expiredDate: req.body.expiredDate,
+        isNonExpire: req.body.isNonExpire,
+        desc: req.body.desc
+      }
+
+      if (req.file) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+        const uploadParams = {
+          Bucket: process.env.AWS_S3_BUCKET,
+          Key: `${process.env.PATH_AWS}/cetificate/${uniqueFileName}`,
+          Body: req.file.buffer,
+          ACL: 'public-read',
+          ContentType: req.file.mimetype
+        };
+
+        const command = new PutObjectCommand(uploadParams);
+
+        await s3Client.send(command);
+
+        usercertificateObj.file = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+      }
+
+      const validate = v.validate(usercertificateObj, schema);
+      if (validate.length > 0) {
+        return res.status(400).json(response(400, 'validation failed', validate));
+      }
+
+      await UserCertificate.update(usercertificateObj, {
+        where: whereCondition
+      });
+
+      const afterUpdate = await UserCertificate.findOne({
+        where: whereCondition
+      });
+
+      return res.status(200).json({
+        status: true,
+        message: 'Update User Certificate Success',
+        data: afterUpdate
+      });
+    } catch (error) {
+      logger.error(`Error : ${error}`);
+      logger.error(`Error message: ${error.message}`);
+      console.error('Error creating user certificate:', error);
+      return res.status(500).json({
+        status: false,
+        message: 'Internal Server Error'
+      });
+    }
+  },
+
+  deleteCertificate: async (req, res) => {
+    try {
+      const whereCondition = {
+        id: req.params.id
+      };
+      if (auth.role === 'User') {
+        whereCondition.user_id = auth.userId
+      }
+      await UserCertificate.destroy({
+        where: whereCondition
+      });
+      res.status(200).json(response(200, 'success delete certificate'));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  }
 }
