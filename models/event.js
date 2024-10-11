@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Event.belongsTo(models.Company, { foreignKey: 'company_id' })
     }
   }
   Event.init({
@@ -20,7 +20,14 @@ module.exports = (sequelize, DataTypes) => {
       unique: true
     },
     desc: DataTypes.TEXT,
-    image: DataTypes.STRING
+    company_id: DataTypes.INTEGER,
+    image: DataTypes.STRING,
+    startDate: DataTypes.DATEONLY,
+    endDate: DataTypes.DATEONLY,
+    regisLink: DataTypes.STRING,
+    phoneNumber: DataTypes.STRING,
+    time: DataTypes.STRING,
+    location: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Event',
