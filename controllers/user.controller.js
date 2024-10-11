@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Token, Role, UserProfile, Userpermission, Permission, sequelize } = require('../models');
+const { User, Token, Role, Company, UserProfile, Userpermission, Permission, sequelize } = require('../models');
 const baseConfig = require('../config/base.config');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
@@ -224,6 +224,7 @@ module.exports = {
     //mendapatkan semua data user
     getuser: async (req, res) => {
         try {
+            let {search, status} = req.query;
             const showDeleted = req.query.showDeleted ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -232,6 +233,14 @@ module.exports = {
             let totalCount;
 
             const whereCondition = {};
+            const whereSearch = {};
+
+            if (search) {
+                whereSearch[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }, { nik: { [Op.iLike]: `%${search}%` } }];
+            }
+            if(status){
+                whereCondition.isActive = status === 'active' ? 'true' : 'false';
+            }
 
             if (showDeleted !== null) {
                 whereCondition.deletedAt = { [Op.not]: null };
@@ -245,11 +254,13 @@ module.exports = {
                         {
                             model: Role,
                             attributes: ['name', 'id'],
-                            as: 'Role'
+                            as: 'Role',
+                            where: { name: 'User' }
                         },
                         {
                             model: UserProfile,
                             as: 'UserProfile',
+                            where: whereSearch
                         },
                     ],
                     limit: limit,
@@ -269,9 +280,91 @@ module.exports = {
                     slug: user.slug,
                     name: user.UserProfile?.name,
                     nik: user.UserProfile?.nik,
+                    email: user.email,
+                    phone: user.UserProfile?.phoneNumber,
+                    isActive: user.isActive,
                     role_id: user.Role?.id,
                     role_name: user.Role?.name,
-                    nik: user.UserProfile?.nik,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt
+                };
+            });
+
+            const pagination = generatePagination(totalCount, page, limit, '/api/get');
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: formattedUsers,
+                pagination: pagination
+            });
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    getCompany: async (req, res) => {
+        try {
+            let {search, status} = req.query;
+            const showDeleted = req.query.showDeleted ?? null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let userGets;
+            let totalCount;
+
+            const whereCondition = {};
+            const whereSearch = {};
+            if (search) {
+                whereSearch[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }, { department: { [Op.iLike]: `%${search}%` } }];
+            }
+            if(status){
+                whereCondition.isActive = status === 'active' ? 'true' : 'false';
+            }
+
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
+            [userGets, totalCount] = await Promise.all([
+                User.findAll({
+                    include: [
+                        {
+                            model: Role,
+                            attributes: ['name', 'id'],
+                            as: 'Role',
+                            where: { name: 'Company' }
+                        },
+                        {
+                            model: Company,
+                            where: whereSearch
+                        },
+                    ],
+                    limit: limit,
+                    offset: offset,
+                    order: [['id', 'ASC']],
+                    where: whereCondition,
+                }),
+                User.count({
+                    where: whereCondition
+                })
+            ]);
+
+            let formattedUsers = userGets.map(user => {
+                return {
+                    id: user.id,
+                    slug: user.slug,
+                    name: user.Company?.name,
+                    department: user.Company?.department,
+                    email: user.email,
+                    numberEmployee: user.Company?.numberEmployee,
+                    isActive: user.isActive,
+                    role_id: user.Role?.id,
+                    role_name: user.Role?.name,
                     createdAt: user.createdAt,
                     updatedAt: user.updatedAt
                 };
@@ -438,6 +531,21 @@ module.exports = {
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
+        }
+    },
+
+    updateStatusAccount: async (req, res) => {
+        try {
+            const user = User.findOne({ where: { slug: req.params.slug } });
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+            await User.update({ isActive: req.body.status }, { where: { slug: req.params.slug } });
+            res.status(200).json({ status: 200, message: 'User status updated successfully' });
+        } catch (error) {
+            logger.error(`Error: ${error}`);
+            logger.error(`Error: ${error.message}`);
+            res.status(500).json(response(500, 'Internal server error', error));
         }
     },
 

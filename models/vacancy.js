@@ -20,8 +20,9 @@ module.exports = (sequelize, DataTypes) => {
       Vacancy.hasMany(models.VacancySkill, {
         foreignKey: 'vacancy_id',
       });
-      Vacancy.hasMany(models.VacancyEducationLevel, {
+      Vacancy.belongsToMany(models.EducationLevel, {
         foreignKey: 'vacancy_id',
+        through: 'VacancyEducationLevel',
       });
       Vacancy.hasMany(models.Application, { foreignKey: 'vacancy_id' });
     }

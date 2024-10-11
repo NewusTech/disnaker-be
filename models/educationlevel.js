@@ -10,8 +10,9 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      EducationLevel.hasMany(models.VacancyEducationLevel,{
-        foreignKey:'educationLevel_id'
+      EducationLevel.belongsToMany(models.Vacancy,{
+        foreignKey:'educationLevel_id',
+        through: 'VacancyEducationLevel'
       });
     }
   }

@@ -8,6 +8,11 @@ module.exports = (sequelize, DataTypes) => {
       User.belongsTo(models.Role, {
         foreignKey: 'role_id',
       });
+      
+      User.hasOne(models.Company, {
+        foreignKey: 'user_id',
+      });
+
       User.hasMany(models.UserExperience, {
         foreignKey: 'user_id',
       });
@@ -43,6 +48,7 @@ module.exports = (sequelize, DataTypes) => {
         through: 'UserSkill',
         foreignKey: 'user_id'
       });
+
     }
   }
   User.init({

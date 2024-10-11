@@ -7,25 +7,27 @@ const route = express.Router();
 
 route.post('/register', userController.createUser);
 route.post('/login', userController.loginUser);
-route.post('/logout', [mid.checkRolesAndLogout(['Super Admin'])], userController.logoutUser); 
+route.post('/logout', [mid.checkRolesAndLogout(['Super Admin'])], userController.logoutUser);
 
 // API UNTUK ADMIN / SUPER ADMIN
-route.get('/user/get', [mid.checkRolesAndLogout(['Super Admin'])], userController.getuser); 
-route.get('/user/get/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.getuserByslug); 
+route.get('/users/get', [mid.checkWithPermissions(['Kelola User', 'Master Data'])], userController.getuser);
+route.get('/companies/get', [mid.checkWithPermissions(['Kelola User', 'Master Data'])], userController.getCompany);
+route.get('/users/get/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.getuserByslug);
 route.delete('/user/delete/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.deleteuser);
+route.put('/account/status/update/:slug', [mid.checkWithPermissions(['Kelola User', 'Master Data'])], userController.updateStatusAccount);
 
 //API BUAT USER
-route.get('/getforuser', [mid.checkRolesAndLogout(['Super Admin'])], userController.getforuser); 
+route.get('/getforuser', [mid.checkRolesAndLogout(['Super Admin'])], userController.getforuser);
 
-route.post('/changepassword/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.changePassword); 
+route.post('/changepassword/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.changePassword);
 
-route.post('/changepwadmin/:slug', [mid.checkRolesAndLogout(['Super Admin' ])], userController.changePasswordFromAdmin); 
+route.post('/changepwadmin/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.changePasswordFromAdmin);
 
-route.post('/forgotpassword', userController.forgotPassword); 
+route.post('/forgotpassword', userController.forgotPassword);
 
-route.post('/reset/:token', userController.resetPassword); 
+route.post('/reset/:token', userController.resetPassword);
 
-route.put('/permissions', [mid.checkRolesAndLogout(['Super Admin'])],userController.updateUserpermissions);
+route.put('/permissions', [mid.checkRolesAndLogout(['Super Admin'])], userController.updateUserpermissions);
 
 route.get('/permissions/:userId', userController.getUserPermissions);
 

@@ -140,14 +140,15 @@ module.exports = {
 
       [vacancyGets, totalCount] = await Promise.all([
         Vacancy.findAll({
-          attributes: ['id', 'title', 'slug',  'workLocation', 'jobType', 'desc', 'applicationDeadline', 'salary', 'location', 'isPublished', 'createdAt', 'updatedAt'],
+          attributes: ['id', 'title', 'slug', 'workLocation', 'jobType', 'desc', 'applicationDeadline', 'salary', 'location', 'isPublished', 'createdAt', 'updatedAt'],
           include: [
+            { model: EducationLevel, attributes: ['id', 'level'] },
             { model: Company, attributes: ['id', 'name', 'imageLogo'] },
             { model: VacancyCategory, attributes: ['id', 'name'] }
           ],
           where: whereCondition,
           limit: limit,
-          offset: offset
+          offset: offset,
         }),
         Vacancy.count({
           where: whereCondition
@@ -172,7 +173,7 @@ module.exports = {
   },
   getvacancycategories: async (req, res) => {
     try {
-      const vacancycategories = await VacancyCategory.findAll({attributes: ['id', 'name']});
+      const vacancycategories = await VacancyCategory.findAll({ attributes: ['id', 'name'] });
       res.status(200).json(response(200, 'success get vacancycategories', vacancycategories));
     } catch (err) {
       logger.error(`Error : ${err}`);
@@ -192,11 +193,7 @@ module.exports = {
         include: [
           { model: Company, attributes: ['id', 'name', 'imageLogo', 'imageBanner', 'desc', 'address', 'numberEmployee', 'website', 'instagram'] },
           { model: VacancyCategory, attributes: ['id', 'name'] },
-          {
-            attributes: ['id', 'educationLevel_id', 'vacancy_id'],
-            model: VacancyEducationLevel,
-            include: [{ model: EducationLevel }]
-          },
+          { model: EducationLevel },
           {
             model: VacancySkill,
             attributes: ['id', 'vacancy_id', 'skill_id'],
