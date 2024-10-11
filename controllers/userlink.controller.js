@@ -70,7 +70,7 @@ module.exports = {
       const user = await User.findOne({
         where: whereCondition,
         include: [
-          {  model: UserLink }
+          { model: UserLink }
         ]
       })
 
@@ -90,14 +90,14 @@ module.exports = {
       logger.error(`Error message: ${err.message}`);
       res.status(500).json(response(500, 'internal server error', err));
     }
-  }, 
+  },
 
   getUserLinkById: async (req, res) => {
     try {
       const whereCondition = {
         id: req.params.id
       };
-      if(auth.role === 'User'){
+      if (auth.role === 'User') {
         whereCondition.user_id = auth.userId
       }
       const userLinks = await UserLink.findOne({
@@ -113,5 +113,95 @@ module.exports = {
       res.status(500).json(response(500, 'internal server error', err));
     }
   },
+  updateUserLink: async (req, res) => {
+    try {
+
+      let whereCondition = {
+        id: Number(req.params.id)
+      }
+
+      if (auth.role === 'User') {
+        whereCondition.user_id = auth.userId
+      }
+
+      const link = await UserLink.findOne({
+        where: whereCondition
+      });
+
+      if (!link) {
+        return res.status(404).json(response(404, 'user link not found'));
+      }
+
+      // Membuat schema untuk validasi
+      const schema = {
+        user_id: { type: "number", optional: false },
+        link: { type: "string", optional: false, min: 3 },
+        linkType: { type: "enum", values: ['portfolio', 'instagram', 'facebook', 'twitter', 'linkedin'], optional: false, min: 3 }
+      }
+
+      // Buat object user link
+      let userLinkObj = {
+        user_id: auth.userId,
+        link: req.body.link,
+        linkType: req.body.linkType
+      };
+
+      // Validasi menggunakan module fastest-validator
+      const validate = v.validate(userLinkObj, schema);
+      if (validate.length > 0) {
+        // Format pesan error dalam bahasa Indonesia
+        const errorMessages = validate.map(error => {
+          if (error.type === 'stringMin') {
+            return `Field ${error.field} minimal ${error.expected} karakter`;
+          } else if (error.type === 'stringMax') {
+            return `Field ${error.field} maksimal ${error.expected} karakter`;
+          } else if (error.type === 'stringPattern') {
+            return `Field ${error.field} format tidak valid`;
+          } else {
+            return `Field ${error.field} tidak valid`;
+          }
+        });
+
+        res.status(400).json({
+          status: 400,
+          message: errorMessages.join(', ')
+        });
+        return;
+      }
+
+      // update user experience
+      await UserLink.update(userLinkObj, { where: whereCondition });
+
+      const afterUpdate = await UserLink.findOne({
+        where: whereCondition
+      });
+
+      res.status(200).json(response(200, 'success update user link', afterUpdate));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
+
+  deleteUserLink: async (req, res) => {
+    try {
+      const whereCondition = {
+        id: req.params.id
+      };
+      if (auth.role === 'User') {
+        whereCondition.user_id = auth.userId
+      }
+      await UserLink.destroy({
+        where: whereCondition
+      });
+      res.status(200).json(response(200, 'success delete user link'));
+    } catch (err) {
+      logger.error(`Error: ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  }
 
 }
