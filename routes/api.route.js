@@ -16,8 +16,10 @@ const usercertificateRoute = require('./usercertificate.route');
 const userskillRoute = require('./userskill.route');
 const userlinkRoute = require('./userlink.route');
 const educationLevelRoute = require('./educationlevel.route');
-const regionRoute = require('./region.route')
-const skillRoute = require('./skill.route')
+const regionRoute = require('./region.route');
+const skillRoute = require('./skill.route');
+const reportRoute = require('./report.route');
+const skmRoute = require('./skm.route');
 
 module.exports = function (app, urlApi) {
 
@@ -38,6 +40,8 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, userskillRoute);
     app.use(urlApi, userlinkRoute);
     app.use(urlApi, educationLevelRoute);
-    app.use(urlApi, regionRoute)
-    app.use(urlApi, skillRoute)
+    app.use(urlApi, regionRoute);
+    app.use(urlApi, skillRoute);
+    app.use(urlApi, reportRoute);
+    app.use(urlApi, skmRoute);
 }
