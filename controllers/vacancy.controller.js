@@ -103,7 +103,7 @@ module.exports = {
 
   getvacancy: async (req, res) => {
     try {
-      let { start_date, end_date, search } = req.query;
+      let { start_date, end_date, search, status} = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
@@ -114,6 +114,9 @@ module.exports = {
 
       if (search) {
         whereCondition[Op.or] = [{ title: { [Op.iLike]: `%${search}%` } }];
+      }
+      if (status) {
+        whereCondition.isPublished = { [Op.eq]: status === 'published' ? 'true' : 'false' };
       }
 
       if (start_date && end_date) {
