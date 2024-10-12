@@ -2,7 +2,13 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    const Permissions = [{
+    const Permissions = [
+      {
+        name: 'Semua',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
       name: 'Kelola Dashboard',
       createdAt: new Date(),
       updatedAt: new Date()
