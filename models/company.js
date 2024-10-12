@@ -13,6 +13,14 @@ module.exports = (sequelize, DataTypes) => {
       Company.belongsTo(models.User, {
         foreignKey: 'user_id',
       });
+
+      Company.hasMany(models.Training, {
+        foreignKey: 'company_id',
+      });
+      
+      Company.hasMany(models.Certification, {
+        foreignKey: 'company_id',
+      });
     }
   }
   Company.init({

@@ -12,7 +12,15 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       VacancyCategory.hasMany(models.Vacancy, {
         foreignKey: 'category_id',
-      })
+      });
+
+      VacancyCategory.hasMany(models.Training, {
+        foreignKey: 'category_id',
+      });
+      
+      VacancyCategory.hasMany(models.Certification, {
+        foreignKey: 'category_id',
+      });
     }
   }
   VacancyCategory.init({
