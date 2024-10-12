@@ -20,6 +20,7 @@ const regionRoute = require('./region.route');
 const skillRoute = require('./skill.route');
 const reportRoute = require('./report.route');
 const skmRoute = require('./skm.route');
+const snkRoute = require('./snk.route');
 
 module.exports = function (app, urlApi) {
 
@@ -44,4 +45,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, skillRoute);
     app.use(urlApi, reportRoute);
     app.use(urlApi, skmRoute);
+    app.use(urlApi, snkRoute);
 }
