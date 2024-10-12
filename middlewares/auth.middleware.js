@@ -59,6 +59,10 @@ const checkWithPermissions = (allowedPermission) => async (req, res, next) => {
             res.status(403).json(response(403, 'Unauthorized: token expired or invalid'));
             return;
         }
+
+        if (auth.userId === 1 && auth.role === 'Super Admin') {
+            next();
+        }
         const userPermission = await User.findOne({
             where: { id: decoded.userId },
             attributes: ['id'],
@@ -83,6 +87,7 @@ const checkWithPermissions = (allowedPermission) => async (req, res, next) => {
             res.status(403).json(response(403, 'Unauthorized: user not found'));
             return;
         }
+
         const hasPermissions = allowedPermission.some(permission => permissions.includes(permission))
         if (!hasPermissions) {
             res.status(403).json(response(403, 'Forbidden: insufficient access rights'));
