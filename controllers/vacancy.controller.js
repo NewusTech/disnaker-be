@@ -103,8 +103,8 @@ module.exports = {
 
   getvacancy: async (req, res) => {
     try {
-      let { 
-        start_date, end_date, search, status, category_id, workLocation, jobType, educationLevel_id 
+      let {
+        start_date, end_date, search, status, category_id, workLocation, jobType, educationLevel_id
       } = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
@@ -194,8 +194,41 @@ module.exports = {
   },
   getvacancycategories: async (req, res) => {
     try {
-      const vacancycategories = await VacancyCategory.findAll({ attributes: ['id', 'name'] });
-      res.status(200).json(response(200, 'success get vacancycategories', vacancycategories));
+      let { search } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
+      let categoryGets;
+      let totalCount;
+
+      const whereCondition = {};
+      const whereSearch = {};
+
+      if (search) {
+        whereSearch[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }, { nik: { [Op.iLike]: `%${search}%` } }];
+      }
+
+      [categoryGets, totalCount] = await Promise.all([
+        VacancyCategory.findAll({
+          limit: limit,
+          offset: offset,
+          order: [['id', 'ASC']],
+          where: whereCondition,
+        }),
+        VacancyCategory.count({
+          where: whereCondition
+        })
+      ]);
+
+      const pagination = generatePagination(totalCount, page, limit, '/api/vacancy/category/get');
+
+      res.status(200).json({
+        status: 200,
+        message: 'success get',
+        data: categoryGets,
+        pagination: pagination
+      });
+
     } catch (err) {
       logger.error(`Error : ${err}`);
       logger.error(`Error message: ${err.message}`);
