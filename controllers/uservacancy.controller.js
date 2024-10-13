@@ -1,25 +1,13 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Vacancy, SavedVacancy } = require('../models');
+const { Vacancy, SavedVacancy, User, Skill } = require('../models');
 
-const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { Op, where } = require('sequelize');
-const { generatePagination } = require('../pagination/pagination');
 
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const moment = require('moment-timezone');
 const logger = require('../errorHandler/logger');
-const vacancy = require('../models/vacancy');
-
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-  useAccelerateEndpoint: true
-});
 
 module.exports = {
   savevacancy: async (req, res) => {
@@ -69,7 +57,7 @@ module.exports = {
       //cek apakah savedVacancy ada atau tidak
       if (!savedVacancyGet) {
         res.status(404).json(response(404, 'savedVacancy not found'));
-      } 
+      }
 
       let savedVacancyDelete = await SavedVacancy.destroy({
         where: {
@@ -79,7 +67,7 @@ module.exports = {
       });
 
       //response menggunakan helper response.formatter
-        res.status(200).json(response(200, 'success delete savedVacancy', savedVacancyDelete));
+      res.status(200).json(response(200, 'success delete savedVacancy', savedVacancyDelete));
     } catch (err) {
       logger.error(`Error : ${err}`);
       logger.error(`Error message: ${err.message}`);
@@ -104,4 +92,62 @@ module.exports = {
       res.status(500).json(response(500, 'internal server error', err));
     }
   },
-}
+
+  getRecommendation: async (req, res) => {
+    try {
+      // Dapatkan keterampilan pengguna
+      const userSkills = await User.findOne({
+        where: { id: auth.userId }, // Pastikan auth.userId adalah id pengguna yang sedang login
+        include: [{ model: Skill, attributes: ['id', 'name'] }]
+      });
+
+      // Cek apakah userSkills ditemukan dan memiliki keterampilan (skills)
+      if (!userSkills || userSkills.Skills.length === 0) {
+        return res.status(404).json(response(404, 'User does not have any skills'));
+      }
+
+      // Map skill_id dari userSkills.Skills
+      const userSkillIds = userSkills.Skills.map(skill => skill.id);
+
+      const recommendedVacancies = await Vacancy.findAll({
+        include: {
+          model: Skill,
+          where: {
+            id: { [Op.in]: userSkillIds }
+          },
+          through: { attributes: [] }
+        }
+      });
+
+      // Responkan rekomendasi lowongan pekerjaan
+      return res.status(200).json(response(200, 'Success get recommended vacancies', recommendedVacancies));
+    } catch (error) {
+      console.error('Error fetching recommended vacancies:', error);
+      return res.status(500).json(response(500, 'Internal Server Error'));
+    }
+  },
+
+  getVacancyUrgent: async (req, res) => {
+    try {
+
+      const urgentDate = moment().add(14, 'day').format('YYYY-MM-DD');
+
+      const urgentVacancies = await Vacancy.findAll({
+        include: {
+          model: Skill,
+        },
+        where: {
+          applicationDeadline: {
+            [Op.lt]: urgentDate // Filter berdasarkan applicationDeadline kurang dari 1 bulan dari sekarang
+          }
+        }
+      });
+
+      // Responkan rekomendasi lowongan pekerjaan
+      return res.status(200).json(response(200, 'Success get recommended vacancies', urgentVacancies));
+    } catch (error) {
+      console.error('Error fetching recommended vacancies:', error);
+      return res.status(500).json(response(500, 'Internal Server Error'));
+    }
+  }
+}  
