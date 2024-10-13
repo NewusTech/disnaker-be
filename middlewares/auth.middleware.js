@@ -59,6 +59,8 @@ const checkWithPermissions = (allowedPermission) => async (req, res, next) => {
             res.status(403).json(response(403, 'Unauthorized: token expired or invalid'));
             return;
         }
+        
+        auth = decoded;
 
         if (auth.userId === 1 && auth.role === 'Super Admin') {
             next();
@@ -74,7 +76,6 @@ const checkWithPermissions = (allowedPermission) => async (req, res, next) => {
         });
         const permissions = userPermission.permissions.map(permission => permission.name);
 
-        auth = decoded;
 
         const tokenCheck = await Token.findOne({ where: { token } });
 

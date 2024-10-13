@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 const logger = require('../errorHandler/logger');
-const { Permission } = require('../models');
+const { Permission, Role, RoleHasPermission, sequelize } = require('../models');
 const Validator = require("fastest-validator");
 const v = new Validator();
 
@@ -178,6 +178,50 @@ module.exports = {
                 res.status(500).json(response(500, 'Internal server error', err));
                 console.log(err);
             }
+        }
+    },
+
+    assignPermission: async (req, res) => {
+        const transaction = await sequelize.transaction();
+        const { permissions, roleId } = req.body;
+        
+        try {
+            const role = await Role.findOne({ where: { id: roleId } });
+            if (!role) {
+                return res.status(404).json({ message: 'Role not found' });
+            }
+
+            const tempPermissions = [];
+
+            for (const permissionId of permissions) {
+                let permission = await Permission.findOne({ where: { id: permissionId } });
+
+                if (!permission) {
+                    return res.status(404).json({ message: 'Permission not found' });
+                }
+
+                tempPermissions.push({
+                    role_id: roleId,
+                    permission_id: permission.id
+                });
+            }
+
+            await RoleHasPermission.destroy({
+                where: { role_id: roleId }
+            });
+
+            for (const tempPermission of tempPermissions) {
+                await RoleHasPermission.create({ role_id: tempPermission.role_id, permission_id: tempPermission.permission_id });
+            }
+            await transaction.commit();
+            return res.status(200).json(response(200, 'success save user permission'));
+
+        } catch (error) {
+            await transaction.rollback();
+            logger.error(`Error : ${error}`);
+            logger.error(`Error message: ${error.message}`);
+            console.error('Error updating user permissions:', error);
+            return res.status(500).json({ message: 'Internal server error' });
         }
     }
 }
