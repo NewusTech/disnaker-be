@@ -1,7 +1,7 @@
 const baseConfig = require('../config/base.config');
 const { response } = require('../helpers/response.formatter');
 const { Token } = require('../models');
-const { User, Permission } = require('../models');
+const { User, Permission, Role } = require('../models');
 const jwt = require('jsonwebtoken');
 
 const checkRolesAndLogout = (allowedRoles) => async (req, res, next) => {
@@ -59,35 +59,30 @@ const checkWithPermissions = (allowedPermission) => async (req, res, next) => {
             res.status(403).json(response(403, 'Unauthorized: token expired or invalid'));
             return;
         }
-        
+
         auth = decoded;
 
-        if (auth.userId === 1 && auth.role === 'Super Admin') {
-            next();
+        if (auth.userId === 1 || auth.role === 'Super Admin') {
+            return next(); //  Super Admin can access all routes
         }
+
         const userPermission = await User.findOne({
             where: { id: decoded.userId },
             attributes: ['id'],
             include: {
-                model: Permission,
+                model: Role,
+                include: { model: Permission },
                 attributes: ['id', 'name'],
-                as: 'permissions',
             }
         });
-        const permissions = userPermission.permissions.map(permission => permission.name);
 
-
-        const tokenCheck = await Token.findOne({ where: { token } });
-
-        if (tokenCheck) {
-            res.status(403).json(response(403, 'Unauthorized: already logged out'));
-            return;
-        }
 
         if (!userPermission) {
             res.status(403).json(response(403, 'Unauthorized: user not found'));
             return;
         }
+
+        const permissions = userPermission.Role.Permissions.map(permission => permission.name);
 
         const hasPermissions = allowedPermission.some(permission => permissions.includes(permission))
         if (!hasPermissions) {
