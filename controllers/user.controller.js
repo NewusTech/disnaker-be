@@ -290,7 +290,7 @@ module.exports = {
                 };
             });
 
-            const pagination = generatePagination(totalCount, page, limit, '/api/get');
+            const pagination = generatePagination(totalCount, page, limit, '/api/users/get');
 
             res.status(200).json({
                 status: 200,

@@ -10,11 +10,11 @@ route.post('/login', userController.loginUser);
 route.post('/logout', [mid.checkRolesAndLogout(['Super Admin'])], userController.logoutUser);
 
 // API UNTUK ADMIN / SUPER ADMIN
-route.get('/users/get', [mid.checkWithPermissions(['Kelola User', 'Master Data'])], userController.getuser);
-route.get('/companies/get', [mid.checkWithPermissions(['Kelola User', 'Master Data'])], userController.getCompany);
-route.get('/users/get/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.getuserByslug);
-route.delete('/user/delete/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.deleteuser);
-route.put('/account/status/update/:slug', [mid.checkWithPermissions(['Kelola User', 'Master Data'])], userController.updateStatusAccount);
+route.get('/users/get', [mid.checkWithPermissions(['Kelola User'])], userController.getuser);
+route.get('/companies/get', [mid.checkWithPermissions(['Kelola User'])], userController.getCompany);
+route.get('/users/get/:slug', [mid.checkRolesAndLogout(['Kelola User'])], userController.getuserByslug);
+route.delete('/user/delete/:slug', [mid.checkRolesAndLogout(['Kelola User'])], userController.deleteuser);
+route.put('/account/status/update/:slug', [mid.checkWithPermissions(['Kelola User'])], userController.updateStatusAccount);
 
 //API BUAT USER
 route.get('/getforuser', [mid.checkRolesAndLogout(['Super Admin'])], userController.getforuser);

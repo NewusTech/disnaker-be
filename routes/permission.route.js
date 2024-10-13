@@ -11,6 +11,7 @@ const express = require('express');
 const route = express.Router();
 
 route.post('/permission/create', [mid.checkRolesAndLogout(['Super Admin'])], permissionController.createpermission);
+route.post('/permission/assign-permission', [mid.checkRolesAndLogout(['Super Admin'])], permissionController.assignPermission);
 route.get('/permission/get', [mid.checkRolesAndLogout(['Super Admin'])], permissionController.getpermission); 
 route.get('/permission/get/:id', [mid.checkRolesAndLogout(['Super Admin'])], permissionController.getpermissionById); 
 route.put('/permission/update/:id', [mid.checkRolesAndLogout(['Super Admin'])], permissionController.updatepermission); 
