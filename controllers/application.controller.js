@@ -1,6 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { Application, Vacancy, User, Company } = require('../models');
-const slugify = require('slugify');
+const { Application, Vacancy, User, Company , UserProfile} = require('../models');
 const Validator = require("fastest-validator");
 const logger = require('../errorHandler/logger');
 const v = new Validator();
@@ -86,9 +85,16 @@ module.exports = {
         Application.findAll({
           include: [
             {
+              model: User, 
+              include: [{ model: UserProfile, attributes: ['id', 'name', 'phoneNumber'] }], 
+              attributes: ['id', 'email', 'isActive', 'slug'],
+              where: whereName
+
+            },
+            {
               model: Vacancy, where: whereTitle, attributes: ['id', 'title'],
               include: [
-                {model: Company, attributes: ['id', 'name'], where: whereName}
+                { model: Company, attributes: ['id', 'name'], where: whereName }
               ]
             }
           ],

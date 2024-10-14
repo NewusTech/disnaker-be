@@ -450,7 +450,7 @@ module.exports = {
                 birthDate: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}$/, optional: true },
                 maritalStatus: { type: "string", optional: true },
                 gender: { type: "string", optional: true },
-                employmentStatus: {type: "enum", values: ['Sudah Bekerja', 'Siap Bekerja', 'Tidak Bekerja'], optional: true},
+                employmentStatus: { type: "enum", values: ['Sudah Bekerja', 'Siap Bekerja', 'Tidak Bekerja'], optional: true },
                 location: { type: "string", optional: true },
                 ktp: { type: "string", optional: true },
                 kk: { type: "string", optional: true },
@@ -733,6 +733,83 @@ module.exports = {
 
         } catch (err) {
             await transaction.rollback();
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    uploadDocCvPortfolio: async (req, res) => {
+        try {
+            // Mendapatkan data userprofile untuk pengecekan
+            let userprofileGet = await UserProfile.findOne({
+                where: {
+                    slug: req.params.slug,
+                    deletedAt: null
+                }
+            });
+
+            // Cek apakah data userprofile ada
+            if (!userprofileGet) {
+                res.status(404).json(response(404, 'userprofile not found'));
+                return;
+            }
+
+            //membuat schema untuk validasi
+            const schema = {
+                cv: { type: 'string', optional: false },
+                portfolio: { type: 'string', optional: false },
+            }
+
+            if (req.files) {
+                if (req.files.cv) {
+                    const timestamp = new Date().getTime();
+                    const uniqueFileName = `${timestamp}-${req.files.cv[0].originalname}`;
+
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${process.env.PATH_AWS}/file/cv/${uniqueFileName}`,
+                        Body: req.files.cv[0].buffer,
+                        ACL: 'public-read',
+                        ContentType: req.files.cv[0].mimetype
+                    };
+
+                    const command = new PutObjectCommand(uploadParams);
+
+                    await s3Client.send(command);
+
+                    req.body.cv = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+                }
+                if (req.files.portfolio) {
+                    const timestamp = new Date().getTime();
+                    const uniqueFileName = `${timestamp}-${req.files.portfolio[0].originalname}`;
+
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${process.env.PATH_AWS}/file/portfolio/${uniqueFileName}`,
+                        Body: req.files.portfolio[0].buffer,
+                        ACL: 'public-read',
+                        ContentType: req.files.portfolio[0].mimetype
+                    };
+                    const command = new PutObjectCommand(uploadParams);
+
+                    await s3Client.send(command);
+                    req.body.portfolio = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+                }
+            }
+
+            const validation = await v.validate(req.body, schema);
+            if (validation !== true) {
+                return res.status(400).json(response(400, validation));
+            }
+
+            await UserProfile.update(req.body, { where: { slug: req.params.slug } });
+            
+            const userprofileAfterUpdate = await UserProfile.findOne({ where: { slug: req.params.slug } });
+            
+            res.status(200).json(response(200, 'success update userprofile', userprofileAfterUpdate));
+        } catch (err) {
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
