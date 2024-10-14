@@ -10,6 +10,6 @@ route.get('/vacancy/category/get', [mid.checkRoles()], vacancyController.getvaca
 route.get('/vacancy/get/:slug', [mid.checkRoles()], vacancyController.getvacancyBySlug); 
 route.put('/vacancy/status/update/:slug', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], vacancyController.updatevacancystatus); 
 // route.put('/vacancy/update/:slug', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], vacancyController.updatevacancy); 
-// route.delete('/vacancy/delete/:slug', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], vacancyController.deletevacancy);
+route.delete('/vacancy/delete/:slug', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], vacancyController.deleteVacancy);
 
 module.exports = route;

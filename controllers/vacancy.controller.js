@@ -308,6 +308,37 @@ module.exports = {
       res.status(500).json(response(500, 'internal server error', err));
       console.log(err);
     }
+  },
+
+  deleteVacancy: async (req, res) => {
+    try {
+
+      //mendapatkan data user untuk pengecekan
+      let userGet = await User.findOne({
+        where: {
+          slug: req.params.slug
+        }
+      });
+
+      //cek apakah data user ada
+      if (!userGet) {
+        res.status(404).json(response(404, 'user not found'));
+        return;
+      }
+
+      await Vacancy.destroy({
+        where: {
+          slug: req.params.slug
+        }
+      });
+
+      res.status(200).json(response(200, 'success delete vacancy'));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
   }
 
   //mengupdate vacancy berdasarkan slug
