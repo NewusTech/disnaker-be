@@ -102,7 +102,6 @@ module.exports = {
   },
 
   // mendapatkan semua data vacancy
-
   getvacancy: async (req, res) => {
     try {
       let {
@@ -307,6 +306,114 @@ module.exports = {
       logger.error(`Error message: ${err.message}`);
       res.status(500).json(response(500, 'internal server error', err));
       console.log(err);
+    }
+  },
+
+  updateVacancy: async (req, res) => {
+    const transaction = await sequelize.transaction();
+    try {
+
+      if (auth.role === 'Company') {
+        const company = await Company.findOne({ where: { user_id: auth.userId }, attributes: ['id', 'user_id'] });
+        if (!company) {
+          return res.status(404).json(response(404, 'Company not found'));
+        }
+      }
+
+      // Cari vacancy berdasarkan id yang dikirim dari request
+      const vacancy = await Vacancy.findOne({ where: { slug: req.params.slug } });
+
+      if (!vacancy) {
+        return res.status(404).json(response(404, 'Vacancy not found'));
+      }
+
+      // Skema validasi yang sama seperti create
+      const schema = {
+        title: { type: "string", min: 3, optional: true },
+        desc: { type: "string", min: 3, optional: true },
+        jobType: { type: "string", optional: true },
+        workLocation: { type: "string", optional: true },
+        category_id: { type: "number", optional: true },
+        salary: { type: "number", optional: true },
+        workingDay: { type: "string", optional: true },
+        workingHour: { type: "string", optional: true },
+        minExperience: { type: "number", optional: true },
+        applicationDeadline: { type: "string", optional: true },
+        gender: { type: "string", optional: true },
+        maxAge: { type: "number", optional: true },
+        location: { type: "string", optional: true },
+        responsibility: { type: "string", min: 3, optional: true },
+        requirement: { type: "string", min: 3, optional: true },
+        status: { type: "string", optional: true },
+        skills: { type: "array", optional: true },
+        educationLevels: { type: "array", optional: true },
+      }
+
+      // Buat object untuk update vacancy
+      let vacancyUpdateObj = {
+        title: req.body.title,
+        jobType: req.body.jobType,
+        workLocation: req.body.workLocation,
+        skills: req.body.skills,
+        minExperience: req.body.minExperience !== undefined ? Number(req.body.minExperience) : vacancy.minExperience,
+        educationLevels: req.body.educationLevels,
+        salary: req.body.salary !== undefined ? Number(req.body.salary) : vacancy.salary,
+        workingDay: req.body.workingDay,
+        workingHour: req.body.workingHour,
+        gender: req.body.gender,
+        maxAge: req.body.maxAge !== undefined ? Number(req.body.maxAge) : vacancy.maxAge,
+        applicationDeadline: req.body.applicationDeadline || vacancy.applicationDeadline,
+        slug: req.body.title ? slugify(req.body.title, { lower: true }) + '-' + new Date().getTime() : vacancy.slug,
+        desc: req.body.desc,
+        isPublished: req.body.status || vacancy.isPublished,
+        location: req.body.location,
+        responsibility: req.body.responsibility,
+        requirement: req.body.requirement,
+        category_id: req.body.category_id !== undefined ? Number(req.body.category_id) : vacancy.category_id,
+      }
+
+      // Validasi menggunakan module fastest-validator
+      const validate = v.validate(vacancyUpdateObj, schema);
+      if (validate.length > 0) {
+        res.status(400).json(response(400, 'validation failed', validate));
+        return;
+      }
+
+      // Update vacancy
+      await vacancy.update(vacancyUpdateObj);
+
+      // Hapus skill dan education level lama
+      await VacancySkill.destroy({ where: { vacancy_id: vacancy.id } });
+      await VacancyEducationLevel.destroy({ where: { vacancy_id: vacancy.id } });
+
+      // Update skill jika ada
+      if (vacancyUpdateObj.skills) {
+        vacancyUpdateObj.skills.forEach(async (skill) => {
+          await VacancySkill.create({
+            skill_id: skill,
+            vacancy_id: vacancy.id,
+          });
+        });
+      }
+
+      // Update education level jika ada
+      if (vacancyUpdateObj.educationLevels) {
+        vacancyUpdateObj.educationLevels.forEach(async (educationLevel) => {
+          await VacancyEducationLevel.create({
+            educationLevel_id: educationLevel,
+            vacancy_id: vacancy.id,
+          });
+        });
+      }
+
+      await transaction.commit();
+      // Response menggunakan helper response.formatter
+      res.status(200).json(response(200, 'Vacancy updated successfully', vacancy));
+    } catch (err) {
+      await transaction.rollback();
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
     }
   },
 
