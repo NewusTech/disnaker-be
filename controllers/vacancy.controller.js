@@ -418,35 +418,46 @@ module.exports = {
   },
 
   deleteVacancy: async (req, res) => {
+    const transaction = await sequelize.transaction();
     try {
-
-      //mendapatkan data user untuk pengecekan
-      let userGet = await User.findOne({
-        where: {
-          slug: req.params.slug
-        }
+      // Mendapatkan data vacancy berdasarkan slug
+      let vacancy = await Vacancy.findOne({
+        where: { slug: req.params.slug }
       });
 
-      //cek apakah data user ada
-      if (!userGet) {
-        res.status(404).json(response(404, 'user not found'));
+      // Cek apakah vacancy ada
+      if (!vacancy) {
+        res.status(404).json(response(404, 'Vacancy not found'));
         return;
       }
 
-      await Vacancy.destroy({
-        where: {
-          slug: req.params.slug
-        }
+      // Hapus semua entri di VacancySkill yang berhubungan dengan vacancy ini
+      await VacancySkill.destroy({
+        where: { vacancy_id: vacancy.id },
+        transaction: transaction
+      });
+      
+      await VacancyEducationLevel.destroy({
+        where: { vacancy_id: vacancy.id },
+        transaction: transaction
       });
 
-      res.status(200).json(response(200, 'success delete vacancy'));
+      // Hapus vacancy setelah relasi dihapus
+      await Vacancy.destroy({
+        where: { slug: req.params.slug },
+        transaction: transaction
+      });
+
+      await transaction.commit();
+      res.status(200).json(response(200, 'Success delete vacancy'));
     } catch (err) {
+      await transaction.rollback();
       logger.error(`Error : ${err}`);
       logger.error(`Error message: ${err.message}`);
-      res.status(500).json(response(500, 'internal server error', err));
-      console.log(err);
+      res.status(500).json(response(500, 'Internal server error', err));
     }
   }
+
 
   //mengupdate vacancy berdasarkan slug
   // updatevacancy: async (req, res) => {
