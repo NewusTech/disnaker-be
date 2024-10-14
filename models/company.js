@@ -18,6 +18,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'company_id',
       });
       
+      Company.hasMany(models.Consultation, {
+        foreignKey: 'company_id',
+      });
+      
       Company.hasMany(models.Certification, {
         foreignKey: 'company_id',
       });

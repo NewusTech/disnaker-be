@@ -6,6 +6,7 @@ const v = new Validator();
 const { Op, where } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 const logger = require('../errorHandler/logger');
+const { is } = require('date-fns/locale');
 
 
 module.exports = {
@@ -69,4 +70,40 @@ module.exports = {
       console.log(err);
     }
   },
+
+  createSkm: async (req, res) => {
+    try {
+
+      const schema = {
+        user_id: { type: "number", min: 1, optional: false },
+        isEasyUse: { type: "string", optional: true },
+        serviceTransparency: { type: "string", optional: true },
+        appExperience: { type: "string", optional: true },
+        feedback: { type: "string", optional: true }
+      }
+      
+      const obj = {
+        user_id: auth.userId,
+        isEasyUse: String(req.body.isEasyUse),
+        serviceTransparency: String(req.body.serviceTransparency),
+        appExperience: req.body.appExperience,
+        feedback: req.body.feedback
+      }
+
+      const validate = v.validate(obj, schema);
+      if (validate.length) {
+        return res.status(400).json(response(400, null, validate));
+      } 
+
+      const skm = await SurveyKepuasan.create(obj);
+
+      res.status(201).json(response(201, 'success create skm', skm));
+
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  }
 }
