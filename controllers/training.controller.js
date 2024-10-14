@@ -27,9 +27,9 @@ module.exports = {
     try {
       // Schema validasi untuk training
 
-      const company = await Company.findOne({ where: { user_id: auth.userId } });
+      let company = await Company.findOne({ where: { user_id: auth.userId } });
       if (!company) {
-        company.id = 1
+        company = { id: 1 };
       }
 
       let schema = {
@@ -218,9 +218,9 @@ module.exports = {
         return res.status(404).json(response(404, 'training not found'));
       }
 
-      const company = await Company.findOne({ where: { user_id: auth.userId } });
+      let company = await Company.findOne({ where: { user_id: auth.userId } });
       if (!company) {
-        company.id = 1
+        company = { id: 1 };
       }
 
       // Schema validasi untuk training
@@ -311,15 +311,19 @@ module.exports = {
 
   deleteTraining: async (req, res) => {
     try {
+      const training = await Training.findOne({ where: { id: req.params.id } });
+      if (!training) {
+        return res.status(404).json(response(404, 'training not found'));
+      }
+
       const whereCondition = {
         id: req.params.id
       };
-      if (auth.role === 'User') {
-        whereCondition.user_id = auth.userId
-      }
+      
       await Training.destroy({
         where: whereCondition
       });
+      
       res.status(200).json(response(200, 'success delete training'));
     } catch (err) {
       logger.error(`Error: ${err}`);

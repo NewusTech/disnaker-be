@@ -22,8 +22,10 @@ const reportRoute = require('./report.route');
 const skmRoute = require('./skm.route');
 const snkRoute = require('./snk.route');
 const trainingRoute = require('./training.route');
+const consultationRoute = require('./consultation.route');
 const certificationRoute = require('./certification.route');
 const accountRoute = require('./account.route');
+const eventRoute = require('./event.route');
 
 module.exports = function (app, urlApi) {
 
@@ -50,6 +52,8 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, skmRoute);
     app.use(urlApi, snkRoute);
     app.use(urlApi, trainingRoute);
+    app.use(urlApi, consultationRoute);
     app.use(urlApi, certificationRoute);
     app.use(urlApi, accountRoute);
+    app.use(urlApi, eventRoute);
 }
