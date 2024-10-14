@@ -26,6 +26,7 @@ const consultationRoute = require('./consultation.route');
 const certificationRoute = require('./certification.route');
 const accountRoute = require('./account.route');
 const eventRoute = require('./event.route');
+const jobInviteRoute = require('./jobinvite.route');
 
 module.exports = function (app, urlApi) {
 
@@ -56,4 +57,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, certificationRoute);
     app.use(urlApi, accountRoute);
     app.use(urlApi, eventRoute);
+    app.use(urlApi, jobInviteRoute);
 }
