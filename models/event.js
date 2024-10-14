@@ -10,7 +10,9 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Event.belongsTo(models.Company, { foreignKey: 'company_id' })
+      Event.belongsTo(models.VacancyCategory, {
+        foreignKey: 'category_id',
+      });
     }
   }
   Event.init({
@@ -20,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       unique: true
     },
     desc: DataTypes.TEXT,
-    company_id: DataTypes.INTEGER,
+    category_id: DataTypes.INTEGER,
     image: DataTypes.STRING,
     startDate: DataTypes.DATEONLY,
     endDate: DataTypes.DATEONLY,
@@ -31,6 +33,12 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Event',
+  });
+  
+  Event.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['id', 'DESC']];
+    }
   });
   return Event;
 };

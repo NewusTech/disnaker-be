@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Event } = require('../models');
+const { Event, VacancyCategory } = require('../models');
 
 const Validator = require("fastest-validator");
 const v = new Validator();
@@ -9,6 +9,7 @@ const { generatePagination } = require('../pagination/pagination');
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const logger = require('../errorHandler/logger');
+const { default: slugify } = require('slugify');
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -25,19 +26,11 @@ module.exports = {
     try {
       // Schema validasi untuk event
 
-      let company = await Company.findOne({ where: { user_id: auth.userId } });
-      if (!company) {
-        // Jika company tidak ditemukan, buat object dengan id = 1
-        company = { id: 1 };
-      }
-
-
       let schema = {
         category_id: { type: "number", optional: false },
         title: { type: "string", optional: false },
         desc: { type: "string", optional: true },
         location: { type: "string", optional: true },
-        quota: { type: "number", optional: true },
         startDate: { type: "string", optional: false },
         endDate: { type: "string", optional: true },
         time: { type: "string", optional: true },
@@ -52,7 +45,6 @@ module.exports = {
         title: req.body.title,
         desc: req.body.desc,
         location: req.body.location,
-        quota: Number(req.body.quota),
         startDate: req.body.startDate,
         endDate: req.body.endDate,
         time: req.body.time,
@@ -85,7 +77,9 @@ module.exports = {
         // Menyimpan URL gambar setelah upload
         objCreate.image = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
-      objCreate.company_id = company.id;
+
+      // Slug
+      objCreate.slug = slugify(objCreate.title, { lower: true, strict: true }) + '-' + Date.now();
 
       // Buat data event baru
       const create = await Event.create(objCreate);
@@ -109,18 +103,12 @@ module.exports = {
 
   getEvent: async (req, res) => {
     try {
-      let { status, search, start_date, end_date } = req.query;
+      let { status, search } = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
 
       let whereCondition = {}
-
-      // Kondisi where untuk pencarian, filter status, dan filter tanggal
-      if (auth.role === "Company") {
-        const company = Company.findOne({ where: { user_id: auth.userId } });
-        whereCondition = { company_id: company.id };
-      }
 
       if (status) {
         whereCondition.status = { [Op.eq]: status };
@@ -133,19 +121,11 @@ module.exports = {
         ];
       }
 
-      if (start_date && end_date) {
-        whereCondition.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
-      } else if (start_date) {
-        whereCondition.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
-      } else if (end_date) {
-        whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
-      }
 
       // Query untuk mendapatkan data aplikasi user dengan pagination
       const [eventGets, totalCount] = await Promise.all([
         Event.findAll({
           include: [
-            { model: Company, attributes: ['id', 'name'] },
             { model: VacancyCategory, attributes: ['id', 'name'] }
           ],
           where: whereCondition,
@@ -183,21 +163,20 @@ module.exports = {
   getEventById: async (req, res) => {
     try {
       const whereCondition = {
-        id: req.params.id
+        slug: req.params.slug
       };
-      if (auth.role === 'Company') {
-        whereCondition.user_id = auth.userId
-      }
+
       const event = await Event.findOne({
         include: [
-          { model: Company, attributes: ['id', 'name'] },
           { model: VacancyCategory, attributes: ['id', 'name'] }
         ],
         where: whereCondition
       });
+
       if (!event) {
         return res.status(404).json(response(404, 'user event not found'));
       }
+      
       res.status(200).json(response(200, 'success get user event', event));
     } catch (err) {
       logger.error(`Error: ${err}`);
@@ -208,15 +187,10 @@ module.exports = {
 
   updateEvent: async (req, res) => {
     try {
-      const event = await Event.findOne({ where: { id: req.params.id } });
+      const event = await Event.findOne({ where: { slug: req.params.slug } });
 
       if (!event) {
         return res.status(404).json(response(404, 'event not found'));
-      }
-
-      let company = await Company.findOne({ where: { user_id: auth.userId } });
-      if (!company) {
-        company = { id: 1 };
       }
 
       // Schema validasi untuk event
@@ -225,7 +199,6 @@ module.exports = {
         title: { type: "string", optional: false },
         desc: { type: "string", optional: true },
         location: { type: "string", optional: true },
-        quota: { type: "number", optional: true },
         startDate: { type: "string", optional: false },
         endDate: { type: "string", optional: true },
         time: { type: "string", optional: true },
@@ -242,7 +215,6 @@ module.exports = {
         title: req.body.title,
         desc: req.body.desc,
         location: req.body.location,
-        quota: Number(req.body.quota),
         startDate: req.body.startDate,
         endDate: req.body.endDate,
         time: req.body.time,
@@ -277,17 +249,16 @@ module.exports = {
         // Menyimpan URL gambar setelah upload
         eventObj.image = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
       }
-      eventObj.company_id = company.id;
+      eventObj.slug = req.body.title ? slugify(req.body.title, { lower: true, strict: true }) + '-' + Date.now() : event.slug;
 
       // Buat data event baru
-      await Event.update(eventObj, { where: { id: req.params.id } });
+      await Event.update(eventObj, { where: { slug: req.params.slug } });
 
       const afterUpdate = await Event.findOne({
         include: [
-          { model: Company, attributes: ['id', 'name'] },
           { model: VacancyCategory, attributes: ['id', 'name'] }
         ],
-        where: { id: req.params.id }
+        where: { slug: eventObj.slug }
       });
 
       // Respon sukses
@@ -307,17 +278,19 @@ module.exports = {
 
   deleteEvent: async (req, res) => {
     try {
-      const event = await Event.findOne({ where: { id: req.params.id } });
+      const event = await Event.findOne({ where: { slug: req.params.slug } });
       if (!event) {
         return res.status(404).json(response(404, 'event not found'));
       }
+
       const whereCondition = {
-        id: req.params.id
+        slug: req.params.slug
       };
       
       await Event.destroy({
         where: whereCondition
       });
+
       res.status(200).json(response(200, 'success delete event'));
     } catch (err) {
       logger.error(`Error: ${err}`);

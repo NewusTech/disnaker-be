@@ -25,6 +25,10 @@ module.exports = (sequelize, DataTypes) => {
       VacancyCategory.hasMany(models.Certification, {
         foreignKey: 'category_id',
       });
+      
+      VacancyCategory.hasMany(models.Event, {
+        foreignKey: 'category_id',
+      });
     }
   }
   VacancyCategory.init({
