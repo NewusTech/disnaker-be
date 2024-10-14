@@ -21,8 +21,8 @@ module.exports = {
       const schema = {
         title: { type: "string", min: 3 },
         desc: { type: "string", min: 3, optional: true },
-        jobType: { type: "string", optional: true },
-        workLocation: { type: "string", optional: true },
+        jobType: { type: "enum", values: ['Full Time', 'Part Time', 'Freelance'], optional: true },
+        workLocation: { type: "enum", values: ['Onsite', 'Remote', 'Hybrid'], optional: true },
         category_id: { type: "number", optional: true },
         salary: { type: "number", optional: true },
         workingDay: { type: "string", optional: true },

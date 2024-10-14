@@ -11,8 +11,8 @@ const upload = multer({ storage: storage });
 
 route.post('/event/create', [mid.checkRoles()], upload.single('image'), eventController.createEvent);
 route.get('/event/get', [mid.checkRoles()], eventController.getEvent);
-route.get('/event/get/:id', [mid.checkRoles()], eventController.getEventById);
-route.put('/event/update/:id', [mid.checkRoles()], upload.single('image'), eventController.updateEvent);
-route.delete('/event/delete/:id', [mid.checkRoles()], eventController.deleteEvent);
+route.get('/event/get/:slug', [mid.checkRoles()], eventController.getEventById);
+route.put('/event/update/:slug', [mid.checkRoles()], upload.single('image'), eventController.updateEvent);
+route.delete('/event/delete/:slug', [mid.checkRoles()], eventController.deleteEvent);
 
 module.exports = route;
