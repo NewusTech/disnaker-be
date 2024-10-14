@@ -11,6 +11,7 @@ const { Op, where } = require('sequelize');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const logger = require('../errorHandler/logger');
+const { default: slugify } = require('slugify');
 
 const transporter = nodemailer.createTransport({
     service: 'Gmail',
@@ -65,10 +66,11 @@ module.exports = {
             }
 
             const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
-            const slug = `${req.body.name}-${timestamp}`;
+            const slug = `${slugify(req.body.name, { lower: true, trim: true })}-${timestamp}`;
 
             let userCreateObj = {
                 email: req.body.email,
+                isActive: 'true',
                 password: passwordHash.generate(req.body.password),
                 role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : 2
             };
@@ -158,6 +160,12 @@ module.exports = {
                     {
                         model: Role,
                         attributes: ['name', 'id'],
+                        include: [
+                            {
+                                model: Permission,
+                                attributes: ['name', 'id'],
+                            }
+                        ],
                         as: 'Role'
                     },
                     {
@@ -191,7 +199,9 @@ module.exports = {
                 expiresIn: 864000 // time expired 
             });
 
-            res.status(200).json(response(200, 'login success', { token: token }));
+            const permissions = user.Role.Permissions.map(permission => permission.name);
+            // get permission
+            res.status(200).json(response(200, 'login success', { token: token, permission: permissions}));
 
         } catch (err) {
 
@@ -224,7 +234,7 @@ module.exports = {
     //mendapatkan semua data user
     getuser: async (req, res) => {
         try {
-            let {search, status} = req.query;
+            let { search, status } = req.query;
             const showDeleted = req.query.showDeleted ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -238,7 +248,7 @@ module.exports = {
             if (search) {
                 whereSearch[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }, { nik: { [Op.iLike]: `%${search}%` } }];
             }
-            if(status){
+            if (status) {
                 whereCondition.isActive = status === 'active' ? 'true' : 'false';
             }
 
@@ -277,7 +287,7 @@ module.exports = {
             let formattedUsers = userGets.map(user => {
                 return {
                     id: user.id,
-                    slug: user.slug,
+                    slug: user.UserProfile?.slug,
                     name: user.UserProfile?.name,
                     nik: user.UserProfile?.nik,
                     email: user.email,
@@ -307,7 +317,7 @@ module.exports = {
 
     getCompany: async (req, res) => {
         try {
-            let {search, status} = req.query;
+            let { search, status } = req.query;
             const showDeleted = req.query.showDeleted ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -320,7 +330,7 @@ module.exports = {
             if (search) {
                 whereSearch[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }, { department: { [Op.iLike]: `%${search}%` } }];
             }
-            if(status){
+            if (status) {
                 whereCondition.isActive = status === 'active' ? 'true' : 'false';
             }
 
