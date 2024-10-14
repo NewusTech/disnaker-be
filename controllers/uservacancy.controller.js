@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Vacancy, SavedVacancy, User, Skill } = require('../models');
+const { Vacancy, SavedVacancy, User, Skill , EducationLevel, Company, VacancyCategory} = require('../models');
 
 const Validator = require("fastest-validator");
 const v = new Validator();
@@ -110,22 +110,28 @@ module.exports = {
       const userSkillIds = userSkills.Skills.map(skill => skill.id);
 
       const recommendedVacancies = await Vacancy.findAll({
-        include: {
-          model: Skill,
-          where: {
-            id: { [Op.in]: userSkillIds }
-          },
-          through: { attributes: [] }
-        }
+        attributes: ['id', 'title', 'slug', 'workLocation', 'jobType', 'desc', 'applicationDeadline', 'salary', 'location', 'isPublished', 'createdAt', 'updatedAt'],
+        include: [
+          { model: EducationLevel, attributes: ['id', 'level'] },
+          { model: Company, attributes: ['id', 'name', 'imageLogo'] },
+          { model: VacancyCategory, attributes: ['id', 'name']},
+          {
+            model: Skill,
+            where: {
+              id: { [Op.in]: userSkillIds }
+            },
+            through: { attributes: [] }
+          }
+        ]
       });
 
-      // Responkan rekomendasi lowongan pekerjaan
-      return res.status(200).json(response(200, 'Success get recommended vacancies', recommendedVacancies));
-    } catch (error) {
-      console.error('Error fetching recommended vacancies:', error);
-      return res.status(500).json(response(500, 'Internal Server Error'));
-    }
-  },
+    // Responkan rekomendasi lowongan pekerjaan
+    return res.status(200).json(response(200, 'Success get recommended vacancies', recommendedVacancies));
+  } catch(error) {
+    console.error('Error fetching recommended vacancies:', error);
+    return res.status(500).json(response(500, 'Internal Server Error'));
+  }
+},
 
   getVacancyUrgent: async (req, res) => {
     try {
@@ -133,9 +139,16 @@ module.exports = {
       const urgentDate = moment().add(14, 'day').format('YYYY-MM-DD');
 
       const urgentVacancies = await Vacancy.findAll({
-        include: {
-          model: Skill,
-        },
+        attributes: ['id', 'title', 'slug', 'workLocation', 'jobType', 'desc', 'applicationDeadline', 'salary', 'location', 'isPublished', 'createdAt', 'updatedAt'],
+        include: [
+          { model: EducationLevel, attributes: ['id', 'level'] },
+          { model: Company, attributes: ['id', 'name', 'imageLogo'] },
+          { model: VacancyCategory, attributes: ['id', 'name']},
+          {
+            model: Skill,
+            through: { attributes: [] }
+          }
+        ],
         where: {
           applicationDeadline: {
             [Op.lt]: urgentDate // Filter berdasarkan applicationDeadline kurang dari 1 bulan dari sekarang
