@@ -53,6 +53,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'user_id'
       });
 
+      User.hasMany(models.JobInvitation, {
+        foreignKey: 'user_id'
+      });
+
     }
   }
   User.init({

@@ -113,7 +113,7 @@ module.exports = {
 
   getTraining: async (req, res) => {
     try {
-      let { status, search, start_date, end_date } = req.query;
+      let { status, search, start_date, end_date, category_id } = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
@@ -128,6 +128,10 @@ module.exports = {
 
       if (status) {
         whereCondition.status = { [Op.eq]: status };
+      }
+
+      if (category_id) {
+        whereCondition.category_id = { [Op.eq]: category_id };
       }
 
       if (search) {

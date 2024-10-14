@@ -10,13 +10,18 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      JobInvitation.belongsTo(models.User, {
+        foreignKey: 'user_id'
+      }); 
+      JobInvitation.belongsTo(models.Vacancy, {
+        foreignKey: 'vacancy_id'
+      }); 
     }
   }
   JobInvitation.init({
     user_id: DataTypes.INTEGER,
-    company_id: DataTypes.INTEGER,
     vacancy_id: DataTypes.INTEGER,
+    isReading: DataTypes.ENUM('true', 'false'),
     status: DataTypes.ENUM("Pending", "Diterima", "Ditolak"),
     invitationDate: DataTypes.DATE,
     responseDate: DataTypes.DATE
