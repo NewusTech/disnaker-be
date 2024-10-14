@@ -248,11 +248,7 @@ module.exports = {
           { model: Company, attributes: ['id', 'name', 'imageLogo', 'imageBanner', 'desc', 'address', 'numberEmployee', 'website', 'instagram'] },
           { model: VacancyCategory, attributes: ['id', 'name'] },
           { model: EducationLevel },
-          {
-            model: VacancySkill,
-            attributes: ['id', 'vacancy_id', 'skill_id'],
-            include: [{ model: Skill }]
-          }
+          { model: Skill, through: { attributes: [] } },
         ],
       });
 
