@@ -1,7 +1,9 @@
 const { response } = require('../helpers/response.formatter');
 
 const { Application, SavedVacancy, User, UserExperience, UserProfile, UserCertificate, UserEducationHistory, UserLink, Skill, Role, sequelize, UserOrganization, UserSkill } = require('../models');
-
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
 const v = new Validator();
@@ -955,5 +957,86 @@ module.exports = {
             console.log(err);
         }
     },
+
+    generateCv: async (req, res) => {
+        try {
+
+            const includeModels = [
+                { model: UserProfile},
+                { model: UserExperience },
+                { model: UserEducationHistory},
+                { model: UserOrganization},
+                { model: UserSkill},
+                { model: UserCertificate },
+            ];
+
+            const [dataGets] = await Promise.all([
+                User.findAll({
+                    where: { id: 5 },
+                    include: includeModels,
+                    order: [['id', 'DESC']]
+                }),
+            ]);
+
+            // Generate HTML content for PDF
+            const templatePath = path.resolve(__dirname, '../views/cv.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+
+            // const reportTableRows = dataGets?.map(data => {
+            //     const createdAtDate = new Date(data?.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            //     const statusfix = data?.status === 1 ? 'Divalidasi' : data?.status === 2 ? 'Ditolak' : 'Belum Divalidasi';
+
+            //     return `
+            //         <tr>
+            //             <td>${createdAtDate}</td>
+            //             <td>${statusfix}</td>
+            //             <td>${data?.id_toponim}</td>
+            //             <td>${data?.nama_lokal}</td>
+            //             <td>${data?.Kecamatan?.name}</td>
+            //             <td>${data?.Desa?.name}</td>
+            //             <td>${data?.Detailtoponim?.catatan ?? '-'}</td>
+            //         </tr>
+            //     `;
+            // }).join('');
+
+            // htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+            // Launch Puppeteer
+            const browser = await puppeteer.launch();
+            const page = await browser.newPage();
+
+            // Set HTML content
+            await page.setContent(`<p> Hello world </p>`, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'Legal',
+                landscape: false,
+                margin: {
+                    top: '1.16in',
+                    right: '1.16in',
+                    bottom: '1.16in',
+                    left: '1.16in'
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `laporan-${currentDate}.pdf`;
+
+            // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
+
+        } catch (err) {
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
+            res.status(500).json(response(500, 'internal server error', err.message));
+        }
+    },
+
 
 }
