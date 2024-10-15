@@ -12,6 +12,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const logger = require('../errorHandler/logger');
 const { default: slugify } = require('slugify');
+const { name } = require('ejs');
 
 const transporter = nodemailer.createTransport({
     service: 'Gmail',
@@ -65,12 +66,8 @@ module.exports = {
                 return;
             }
 
-            const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
-            const slug = `${slugify(req.body.name, { lower: true, trim: true })}-${timestamp}`;
-
             let userCreateObj = {
                 email: req.body.email,
-                isActive: 'true',
                 password: passwordHash.generate(req.body.password),
                 role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : 2
             };
@@ -112,6 +109,74 @@ module.exports = {
                 // Menangani error lainnya
                 res.status(500).json(response(500, 'terjadi kesalahan pada server', err));
             }
+            console.log(err);
+        }
+    },
+
+    adminCreateUser: async (req, res) => {
+        try {
+            const userExist = await User.findOne({ where: { email: req.body.email } });
+            if (userExist) return res.status(400).json(response(400, 'user already exist'));
+
+            const role = await Role.findOne({ where: { name: 'User' } });
+            if (!role) return res.status(404).json(response(404, 'role not found'));
+            
+            const schema = {
+                name: { type: "string", min: 3 },
+                email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                password: { type: "string", min: 5, max: 16 },
+                role_id: { type: "number", optional: true }
+            };
+
+            const obj = {
+                name: req.body.name,
+                password: req.body.password,
+                role_id: role.id,
+                email: req.body.email,
+            };
+
+            const validate = v.validate(obj, schema);
+
+            if (validate.length > 0) {
+                const errorMessages = validate.map(error => {
+                    if (error.type === 'stringMin') {
+                        return `${error.field} minimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringMax') {
+                        return `${error.field} maksimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringPattern') {
+                        return `${error.field} format tidak valid`;
+                    } else {
+                        return `${error.field} tidak valid`;
+                    }
+                });
+                res.status(400).json({
+                    status: 400,
+                    message: errorMessages.join(', ')
+                });
+                return;
+            }
+            obj.password = passwordHash.generate(obj.password);
+
+            let user = await User.create(obj);
+            if (user) {
+               user.profile = await UserProfile.create({ name: obj.name, user_id: user.id, slug: obj.slug });
+            };
+
+            const userResponse = {
+                id: user.id,    
+                email: user.email,
+                name: user.profile.name,
+                slug: user.slug,
+                role_id: user.role_id,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            };
+
+            res.status(201).json(response(201, 'user created', userResponse));
+        } catch (err) {
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
+            res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
@@ -201,7 +266,7 @@ module.exports = {
 
             const permissions = user.Role.Permissions.map(permission => permission.name);
             // get permission
-            res.status(200).json(response(200, 'login success', { token: token, permission: permissions}));
+            res.status(200).json(response(200, 'login success', { token: token, permission: permissions }));
 
         } catch (err) {
 

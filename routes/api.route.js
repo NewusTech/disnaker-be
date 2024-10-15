@@ -17,6 +17,7 @@ const userskillRoute = require('./userskill.route');
 const userlinkRoute = require('./userlink.route');
 const educationLevelRoute = require('./educationlevel.route');
 const regionRoute = require('./region.route');
+const companyRoute = require('./company.route');
 const skillRoute = require('./skill.route');
 const reportRoute = require('./report.route');
 const skmRoute = require('./skm.route');
@@ -58,4 +59,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, accountRoute);
     app.use(urlApi, eventRoute);
     app.use(urlApi, jobInviteRoute);
+    app.use(urlApi, companyRoute);
 }
