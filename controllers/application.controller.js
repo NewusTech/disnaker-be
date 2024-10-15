@@ -62,7 +62,7 @@ module.exports = {
       const whereTitle = {};
       const whereName = {};
 
-      const userRole = auth.role; 
+      const userRole = auth.role;
       const company = await Company.findOne({ where: { user_id: auth.userId } });
 
       if (search) {
@@ -106,7 +106,7 @@ module.exports = {
                       userRole === 'Company' ? { id: company.id } : {},
                       ...whereName[Op.or] ? whereName[Op.or] : []
                     ]
-                  } 
+                  }
                 }
               ]
             }
@@ -130,5 +130,33 @@ module.exports = {
       res.status(500).json(response(500, 'internal server error', err));
     }
   },
+
+  updateApplication: async (req, res) => {
+    try {
+
+      const schema = {
+        status: { type: "enum", values: ['Dilamar', 'Wawancara', 'Tes', 'Diterima', 'Ditolak'], optional: false },
+      }
+
+      const validate = v.validate(req.body, schema);
+      if (validate.length > 0) {
+        res.status(400).json(response(400, 'validation failed', validate));
+        return;
+      }
+
+      await Application.update(req.body, {
+        where: { id: req.params.id }
+      });
+
+      const applicationUpdate = await Application.findOne({
+        where: { id: req.params.id }
+      })
+      res.status(200).json(response(200, 'success update application', applicationUpdate));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+    }
+  }
 
 }
