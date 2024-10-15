@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { Application, Vacancy, User, Company, UserProfile } = require('../models');
+const { Application, Vacancy, User, Company, UserProfile, UserEducationHistory, Skill, UserCertificate, UserExperience, UserLink, UserOrganization } = require('../models');
 const Validator = require("fastest-validator");
 const logger = require('../errorHandler/logger');
 const v = new Validator();
@@ -157,6 +157,49 @@ module.exports = {
       logger.error(`Error message: ${err.message}`);
       res.status(500).json(response(500, 'internal server error', err));
     }
-  }
+  },
+  detail: async (req, res) => {
+    try {
+      const application = await Application.findOne({
+        where: { id: req.params.id },
+        include: [
+          {
+            model: Vacancy,
+            attributes: ['id', 'title'],
+          },
+          {
+            model: User,
+            attributes: ['id', 'email'],
+            include: [
+              { model: UserProfile },
+              { model: UserExperience },
+              { model: UserEducationHistory },
+              { model: UserOrganization },
+              { model: Skill },
+              { model: UserCertificate },
+              { model: UserLink },
+            ]
+          },
+        ]
+      });
 
+      if (!application) {
+        res.status(404).json(response(404, "Application Not found"));
+        return;
+      }
+
+      let applicationData = application.get({ plain: true });
+
+      return res.status(200).json({
+        status: 200,
+        message: "success get application",
+        data: applicationData
+      });
+    } catch (error) {
+      logger.error(`Error : ${error}`);
+      logger.error(`Error message: ${error.message}`);
+      console.error('Error fetching user permissions:', error);
+      res.status(500).json(response(500, 'internal server error', error));
+    }
+  }
 }
