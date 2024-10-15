@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { Application, Vacancy, User, Company , UserProfile} = require('../models');
+const { Application, Vacancy, User, Company, UserProfile } = require('../models');
 const Validator = require("fastest-validator");
 const logger = require('../errorHandler/logger');
 const v = new Validator();
@@ -62,6 +62,9 @@ module.exports = {
       const whereTitle = {};
       const whereName = {};
 
+      const userRole = auth.role; 
+      const company = await Company.findOne({ where: { user_id: auth.userId } });
+
       if (search) {
         whereTitle[Op.or] = [{ title: { [Op.iLike]: `%${search}%` } }];
         whereName[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
@@ -85,16 +88,26 @@ module.exports = {
         Application.findAll({
           include: [
             {
-              model: User, 
-              include: [{ model: UserProfile, attributes: ['id', 'name', 'phoneNumber'] }], 
+              model: User,
+              include: [{ model: UserProfile, attributes: ['id', 'name', 'phoneNumber'] }],
               attributes: ['id', 'email', 'isActive', 'slug'],
               where: whereName
-
             },
             {
-              model: Vacancy, where: whereTitle, attributes: ['id', 'title'],
+              model: Vacancy,
+              where: whereTitle,
+              attributes: ['id', 'title'],
               include: [
-                { model: Company, attributes: ['id', 'name'], where: whereName }
+                {
+                  model: Company,
+                  attributes: ['id', 'name'],
+                  where: {
+                    [Op.and]: [
+                      userRole === 'Company' ? { id: company.id } : {},
+                      ...whereName[Op.or] ? whereName[Op.or] : []
+                    ]
+                  } 
+                }
               ]
             }
           ],
@@ -108,6 +121,7 @@ module.exports = {
           where: whereCondition
         })
       ]);
+
       const pagination = generatePagination(totalCount, limit, page);
       res.status(200).json(response(200, 'success get application', applicationGets, pagination));
     } catch (err) {

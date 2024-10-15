@@ -15,8 +15,17 @@ module.exports = {
   createvacancy: async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-      const company = await Company.findOne({ where: { user_id: auth.userId }, attributes: ['id', 'user_id'] });
-
+      const company = await Company.findOne({ 
+        where: { user_id: auth.userId }
+      });
+      
+      // Mendapatkan semua atribut dari company dan mengecek kekosongan field yang wajib
+      const requiredFields = ['user_id', 'department', 'name', 'desc', 'address', 'numberEmployee', 'website', 'instagram' ,'imageLogo', 'imageBanner'];
+      const missingFields = requiredFields.filter(field => !company[field]);
+      
+      if (missingFields.length > 0) {
+        return res.status(400).json(response(400, `Company Profile tidak lengkap. Silahkan lengkapi field: ${missingFields.join(', ')}`));
+      }
       //membuat schema untuk validasi
       const schema = {
         title: { type: "string", min: 3 },

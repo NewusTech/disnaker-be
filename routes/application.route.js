@@ -5,7 +5,7 @@ const express = require('express');
 const route = express.Router();
 
 route.post('/application/create', [mid.checkRolesAndLogout(['User'])], applicationController.createapplication);
-route.get('/application/get', [mid.checkRoles()], applicationController.getApplication); 
+route.get('/application/get', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], applicationController.getApplication); 
 // route.get('/application/get/:slug', [mid.checkRoles()], applicationController.getapplicationBySlug); 
 // route.put('/application/update/:slug', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], applicationController.updateapplication); 
 // route.delete('/application/delete/:slug', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], applicationController.deleteapplication);

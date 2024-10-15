@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const logger = require('../errorHandler/logger');
 const { default: slugify } = require('slugify');
 const { name } = require('ejs');
+const { json } = require('body-parser');
 
 const transporter = nodemailer.createTransport({
     service: 'Gmail',
@@ -236,10 +237,15 @@ module.exports = {
                     {
                         model: UserProfile,
                         as: 'UserProfile',
-                        attributes: ['name', 'id', 'nik', 'phoneNumber'],
+                        attributes: ['name', 'id', 'user_id', 'nik', 'phoneNumber'],
+                    },
+                    {
+                        model: Company,
                     }
                 ]
             });
+
+            console.log(user);
 
             // cek apakah user ditemukan
             if (!user) {
@@ -257,7 +263,7 @@ module.exports = {
             let token = jwt.sign({
                 userId: user.id,
                 email: user.email,
-                name: user.UserProfile.name,
+                name: user.UserProfile?.name ?? user.Company?.name,
                 roleId: user.role_id,
                 role: user.Role.name,
             }, baseConfig.auth_secret, {
