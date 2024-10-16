@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
       UserEducationHistory.belongsTo(models.User, {
         foreignKey: 'user_id'
       });
+      UserEducationHistory.belongsTo(models.EducationLevel, {
+        foreignKey: 'educationLevel_id'
+      });
     }
   }
   UserEducationHistory.init({
