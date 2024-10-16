@@ -48,7 +48,7 @@ module.exports = {
 
       res.status(200).json({
         status: 200,
-        message: 'success get skm',
+        message: 'success get Information',
         data: surveyGets,
         pagination: pagination
       });

@@ -31,6 +31,8 @@ const eventRoute = require('./event.route');
 const jobInviteRoute = require('./jobinvite.route');
 const facilityRoute = require('./facility.route');
 const complaintRoute = require('./complaint.route');
+const yellowcardRoute = require('./yellowcard.route');
+
 module.exports = function (app, urlApi) {
 
     app.use(urlApi, artikelRoute);
@@ -65,4 +67,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, informationRoute);
     app.use(urlApi, facilityRoute);
     app.use(urlApi, complaintRoute);
+    app.use(urlApi, yellowcardRoute);
 }

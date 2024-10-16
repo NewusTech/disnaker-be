@@ -92,7 +92,9 @@ module.exports = {
       const offset = (page - 1) * limit;
 
       let whereCondition = {}
-
+      
+      if(auth.role === 'User') whereCondition.user_id = { [Op.eq]: auth.userId };
+      
       if (status) {
         whereCondition.status = { [Op.eq]: status };
       }
@@ -122,11 +124,10 @@ module.exports = {
           include: [
             {
               model: User,
-              attributes: ['id'],
+              attributes: ['id', 'email'],
               include: [
                 {
                   model: UserProfile,
-                  attributes: ['id', 'name']
                 }
               ]
             },
@@ -177,7 +178,6 @@ module.exports = {
             include: [
               {
                 model: UserProfile,
-                attributes: ['id', 'name']
               }
             ]
           },
@@ -231,8 +231,7 @@ module.exports = {
             attributes: ['id'],
             include: [
               {
-                model: UserProfile,
-                attributes: ['id', 'name']
+                model: UserProfile
               }
             ]
           },
