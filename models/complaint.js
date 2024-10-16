@@ -10,7 +10,9 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Complaint.belongsTo(models.User, {
+        foreignKey: 'user_id'
+      });
     }
   }
   Complaint.init({
@@ -27,6 +29,26 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Complaint',
+    hooks: {
+      beforeCreate: async (complaint, options) => {
+        const lastComplaint = await Complaint.findOne({
+          order: [['createdAt', 'DESC']] // Ambil data terakhir berdasarkan waktu pembuatan
+        });
+  
+        let newSubmissionNumber = '001'; // Nomor awal jika belum ada data
+  
+        if (lastComplaint) {
+          // Ekstrak nomor dari submissionNumber terakhir
+          const lastSubmissionNumber = lastComplaint.submissionNumber;
+          const lastNumber = parseInt(lastSubmissionNumber); // Buang prefix 'SUB' dan jadikan integer
+          newSubmissionNumber = String(lastNumber + 1).padStart(3, '0'); // Tambah 1 dan tambahkan padding jika perlu
+        }
+  
+        // Set submissionNumber baru ke complaint yang akan dibuat
+        complaint.submissionNumber = newSubmissionNumber;
+        complaint.status = 'Proses';
+      }
+    }
   });
   Complaint.addHook('beforeFind', (options) => {
     if (!options.order) {
