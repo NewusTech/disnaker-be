@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { Application, Vacancy, User, Company, UserProfile, UserEducationHistory, Skill, UserCertificate, UserExperience, UserLink, UserOrganization } = require('../models');
+const { Application, Vacancy, User, Company, UserProfile, EducationLevel, UserEducationHistory, Skill, UserCertificate, UserExperience, UserLink, UserOrganization } = require('../models');
 const Validator = require("fastest-validator");
 const logger = require('../errorHandler/logger');
 const v = new Validator();
@@ -173,7 +173,7 @@ module.exports = {
             include: [
               { model: UserProfile },
               { model: UserExperience },
-              { model: UserEducationHistory },
+              { model: UserEducationHistory, include: [EducationLevel] },
               { model: UserOrganization },
               { model: Skill },
               { model: UserCertificate },
