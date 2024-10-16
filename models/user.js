@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       User.belongsTo(models.Role, {
         foreignKey: 'role_id',
       });
-      
+
       User.hasOne(models.Company, {
         foreignKey: 'user_id',
       });
@@ -18,6 +18,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'user_id',
       });
       User.hasMany(models.Complaint, {
+        foreignKey: 'user_id',
+      }); 
+      User.hasMany(models.YellowCard, {
         foreignKey: 'user_id',
       });
       User.hasMany(models.UserExperience, {
@@ -83,12 +86,12 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   function generateUniqueSlug() {
-    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       const r = Math.random() * 16 | 0;
       const v = c === 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
     });
-    
+
     return uuid;
   }
 
