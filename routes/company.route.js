@@ -9,7 +9,7 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-route.post('/company/create', [mid.checkRoles()], companyController.createCompany);
+route.post('/company/create', companyController.createCompany);
 // route.get('/company/get', [mid.checkRoles()], companyController.getCertification);
 // route.get('/company/get/:id', [mid.checkRoles()], companyController.getCertificationById);
 // route.put('/company/update/:id', [mid.checkRoles()], upload.single('image'), companyController.updateCertification);

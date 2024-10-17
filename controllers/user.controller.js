@@ -80,7 +80,7 @@ module.exports = {
             let userProfileObj = {
                 name: req.body.name,
                 user_id: user.id,
-                slug: slug
+                slug: user.slug
             };
 
             // Membuat entri baru di tabel userProfileObj

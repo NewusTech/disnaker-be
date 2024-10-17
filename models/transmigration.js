@@ -17,20 +17,41 @@ module.exports = (sequelize, DataTypes) => {
   }
   
   Transmigration.init({
+    user_id: DataTypes.INTEGER,
     submissionNumber: {
       type: DataTypes.STRING,
       unique: true
     },
     domicile: DataTypes.TEXT,
-    kecamatan_id: DataTypes.INTEGER,
-    kelurahan_id: DataTypes.INTEGER,
-    provinsi_id: DataTypes.INTEGER,
-    kabupaten_id: DataTypes.INTEGER,
+    provinsi: DataTypes.STRING,
+    kabupaten: DataTypes.STRING,
+    kecamatan: DataTypes.STRING,
+    kelurahan: DataTypes.STRING,
     status: DataTypes.ENUM('Pengajuan', 'Proses', 'Terbit', 'Diterima', 'Ditolak'),
     kk: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Transmigration',
+    hooks: {
+      beforeCreate: async (complaint, options) => {
+        const lastComplaint = await Complaint.findOne({
+          order: [['createdAt', 'DESC']] // Ambil data terakhir berdasarkan waktu pembuatan
+        });
+  
+        let newSubmissionNumber = '001'; // Nomor awal jika belum ada data
+  
+        if (lastComplaint) {
+          // Ekstrak nomor dari submissionNumber terakhir
+          const lastSubmissionNumber = lastComplaint.submissionNumber;
+          const lastNumber = parseInt(lastSubmissionNumber); // Buang prefix 'SUB' dan jadikan integer
+          newSubmissionNumber = String(lastNumber + 1).padStart(3, '0'); // Tambah 1 dan tambahkan padding jika perlu
+        }
+  
+        // Set submissionNumber baru ke complaint yang akan dibuat
+        complaint.submissionNumber = newSubmissionNumber;
+        complaint.status = 'Pengajuan';
+      }
+    }
   });
   return Transmigration;
 };
