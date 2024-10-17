@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
       Transmigration.hasMany(models.TransmigrationMember, {
         foreignKey: 'transmigration_id'
       });
+      Transmigration.belongsTo(models.User, {
+        foreignKey: 'user_id'
+      })
     }
   }
   
@@ -34,15 +37,15 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Transmigration',
     hooks: {
       beforeCreate: async (complaint, options) => {
-        const lastComplaint = await Complaint.findOne({
+        const lastTransmigration = await Transmigration.findOne({
           order: [['createdAt', 'DESC']] // Ambil data terakhir berdasarkan waktu pembuatan
         });
   
         let newSubmissionNumber = '001'; // Nomor awal jika belum ada data
   
-        if (lastComplaint) {
+        if (lastTransmigration) {
           // Ekstrak nomor dari submissionNumber terakhir
-          const lastSubmissionNumber = lastComplaint.submissionNumber;
+          const lastSubmissionNumber = lastTransmigration.submissionNumber;
           const lastNumber = parseInt(lastSubmissionNumber); // Buang prefix 'SUB' dan jadikan integer
           newSubmissionNumber = String(lastNumber + 1).padStart(3, '0'); // Tambah 1 dan tambahkan padding jika perlu
         }

@@ -48,6 +48,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'user_id'
       });
       User.hasMany(models.Application, { foreignKey: 'user_id' });
+      User.hasMany(models.Transmigration, { foreignKey: 'user_id' });
       User.hasMany(models.SavedVacancy, { foreignKey: 'user_id' });
       User.belongsToMany(models.Permission, {
         through: 'UserPermissions',

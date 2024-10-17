@@ -12,7 +12,10 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       YellowCard.belongsTo(models.User, {
         foreignKey: 'user_id'
-      })
+      });
+      YellowCard.belongsTo(models.EducationLevel, {
+        foreignKey: 'educationLevel_id'
+      });
     }
   }
   YellowCard.init({

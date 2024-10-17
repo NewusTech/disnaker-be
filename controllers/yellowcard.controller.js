@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { YellowCard, User, UserProfile } = require('../models');
+const { YellowCard, User, UserProfile, EducationLevel } = require('../models');
 
 const Validator = require("fastest-validator");
 const v = new Validator();
@@ -157,11 +157,10 @@ module.exports = {
             model: User,
             attributes: ['id', 'email'],
             include: [
-              {
-                model: UserProfile,
-              }
+              { model: UserProfile, },
             ]
           },
+          { model: EducationLevel, }
         ],
         where: whereCondition
       });
