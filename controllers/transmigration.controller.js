@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Transmigration, User, UserProfile, sequelize } = require('../models');
+const { Transmigration, TransmigrationMember, User, UserProfile, sequelize } = require('../models');
 
 const Validator = require("fastest-validator");
 const v = new Validator();
@@ -33,6 +33,7 @@ module.exports = {
         kabupaten: { type: "string", min: 3, optional: false },
         kecamatan: { type: "string", min: 3, optional: false },
         kelurahan: { type: "string", min: 3, optional: false },
+        kk: { type: "string", min: 3, optional: false },
         anggotaJiwa: { type: "array", min: 1, optional: true },
       };
 
@@ -43,6 +44,7 @@ module.exports = {
         kabupaten: req.body.kabupaten,
         kecamatan: req.body.kecamatan,
         kelurahan: req.body.kelurahan,
+        kk: req.body.kk,
         anggotaJiwa: req.body.anggotaJiwa
       };
 
@@ -52,36 +54,28 @@ module.exports = {
         return res.status(400).json(response(400, 'validation failed', validate));
       }
 
-      // Jika ada file gambar yang di-upload
-      if (req.file) {
-        const timestamp = new Date().getTime();
-        const uniqueFileName = `${timestamp}-${req.file.originalname}`;
-
-        const uploadParams = {
-          Bucket: process.env.AWS_S3_BUCKET,
-          Key: `${process.env.PATH_AWS}/transmigrations/${uniqueFileName}`,
-          Body: req.file.buffer,
-          ACL: 'public-read',
-          ContentType: req.file.mimetype
-        };
-
-        const command = new PutObjectCommand(uploadParams);
-        await s3Client.send(command);
-
-        // Menyimpan URL gambar setelah upload
-        objCreate.kk = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
-      }
       objCreate.user_id = auth.userId;
 
       // Buat data transmigration baru
       const create = await Transmigration.create(objCreate);
 
+      req.body.anggotaJiwa.forEach(async (item) => {
+        await TransmigrationMember.create({
+          transmigration_id: create.id,
+          nik: item.nik,
+          name: item.name,
+          gender: item.gender,
+          familyStatus: item.familyStatus
+        })
+      });
+
       await dbTransaction.commit();
-      // Respon sukses
+      // Response sukses
+      const transmigration = await Transmigration.findOne({ where: { id: create.id }, include: [TransmigrationMember]});
       return res.status(201).json({
         status: 201,
         message: 'Success create transmigration',
-        data: create
+        data: transmigration
       });
     } catch (error) {
       await dbTransaction.rollback();
@@ -89,7 +83,7 @@ module.exports = {
       logger.error(`Error message: ${error.message}`);
       console.error('Error creating transmigration:', error);
       return res.status(500).json({
-        status: false,
+        status: 500,
         message: 'Internal Server Error'
       });
     }

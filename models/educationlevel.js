@@ -14,6 +14,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:'educationLevel_id',
         through: 'VacancyEducationLevel'
       });
+      EducationLevel.hasMany(models.YellowCard, {
+        foreignKey: 'educationLevel_id',
+      });
     }
   }
   EducationLevel.init({
