@@ -146,13 +146,16 @@ module.exports = {
                     role_id: req.params.id
                 }
             })
-
+            
             roleUpdateObj.permissions.forEach(async (item) => {
-                await RoleHasPermission.create({
+                const roleHasPermission = await RoleHasPermission.create({
                     role_id: req.params.id,
                     permission_id: item
                 });
+
+                console.log(roleHasPermission.dataValues);
             });
+
 
             //mendapatkan data role setelah update
             let roleAfterUpdate = await Role.findOne({
