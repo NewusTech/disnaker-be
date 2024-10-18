@@ -71,7 +71,7 @@ module.exports = {
 
       await dbTransaction.commit();
       // Response sukses
-      const transmigration = await Transmigration.findOne({ where: { id: create.id }, include: [TransmigrationMember]});
+      const transmigration = await Transmigration.findOne({ where: { id: create.id }, include: [TransmigrationMember] });
       return res.status(201).json({
         status: 201,
         message: 'Success create transmigration',
@@ -181,11 +181,10 @@ module.exports = {
             model: User,
             attributes: ['id'],
             include: [
-              {
-                model: UserProfile,
-              }
+              { model: UserProfile, },
             ]
           },
+          { model: TransmigrationMember, },
         ],
         where: whereCondition
       });
@@ -210,14 +209,12 @@ module.exports = {
 
       // Schema validasi untuk transmigration
       let schema = {
-        status: { type: "enum", values: ["Ditutup", "Diterima"], optional: false },
-        response: { type: "string", optional: true },
+        status: { type: "enum", values: ['Proses', 'Terbit', 'Diterima', 'Ditolak'], optional: false },
       };
 
       // Objek untuk membuat data transmigration
       const transmigrationObj = {
         status: req.body.status,
-        response: req.body.response
       };
 
       // Validasi input

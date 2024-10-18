@@ -17,13 +17,15 @@ module.exports = {
       //membuat schema untuk validasi
       const schema = {
         user_id: { type: "number", min: 1, optional: false },
-        vacancy_id: { type: "number", min: 1, optional: false }
+        vacancy_id: { type: "number", min: 1, optional: false },
+        desc: { type: "string", optional: true }
       }
 
       //buat object invitation
       let invitationCreateObj = {
         user_id: Number(req.body.user_id),
         vacancy_id: parseInt(req.body.vacancy_id),
+        desc: req.body.desc
       }
 
       //validasi menggunakan module fastest-validator
@@ -125,6 +127,7 @@ module.exports = {
       [jobInvitationGets, totalCount] = await Promise.all([
         JobInvitation.findAll({
           where: { user_id: auth.userId },
+          include: [{ model: Vacancy, }],
           limit: limit,
           offset: offset,
           attributes: ['id', 'user_id', 'vacancy_id', 'createdAt', 'status', 'isReading', 'updatedAt'],
@@ -183,15 +186,15 @@ module.exports = {
       const whereCondition = {
         id: id
       };
-      
+
       const updateData = {
         status: status
       };
-      
+
       await JobInvitation.update(updateData, {
         where: whereCondition
       });
-      
+
       res.status(200).json(response(200, 'success update job invitation'));
     } catch (err) {
       logger.error(`Error : ${err}`);

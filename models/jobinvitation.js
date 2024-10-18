@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     user_id: DataTypes.INTEGER,
     vacancy_id: DataTypes.INTEGER,
     isReading: DataTypes.ENUM('true', 'false'),
+    desc: DataTypes.TEXT,
     status: DataTypes.ENUM("Pending", "Diterima", "Ditolak"),
     invitationDate: DataTypes.DATE,
     responseDate: DataTypes.DATE
