@@ -23,6 +23,7 @@ route.put('/account/status/update/:slug', [mid.checkWithPermissions(['Kelola Use
 route.get('/getforuser', [mid.checkRolesAndLogout(['Super Admin'])], userController.getforuser);
 
 route.post('/changepassword/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.changePassword);
+route.post('/user/password/change/:slug', [mid.checkRolesAndLogout(['User'])], userController.changePassword);
 
 route.post('/changepwadmin/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userController.changePasswordFromAdmin);
 

@@ -663,7 +663,7 @@ module.exports = {
         }
 
         try {
-            const user = await User.findOne({ where: { slug } });
+            const user = await User.scope('withPassword').findOne({ where: { slug } });
             if (!user) {
                 return res.status(404).json({ message: 'Pengguna tidak ditemukan.' });
             }

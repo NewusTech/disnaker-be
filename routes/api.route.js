@@ -23,6 +23,7 @@ const informationRoute = require('./information.route');
 const reportRoute = require('./report.route');
 const skmRoute = require('./skm.route');
 const snkRoute = require('./snk.route');
+const kebijakanprivasiRoute = require('./kebijakanprivasi.route');
 const trainingRoute = require('./training.route');
 const consultationRoute = require('./consultation.route');
 const certificationRoute = require('./certification.route');
