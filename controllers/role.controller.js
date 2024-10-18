@@ -31,7 +31,7 @@ module.exports = {
 
             //buat role
             let roleCreate = await Role.create(roleCreateObj);
-            
+
             roleCreateObj.permissions.forEach(async (item) => {
                 await RoleHasPermission.create({
                     role_id: roleCreate.id,
@@ -113,11 +113,17 @@ module.exports = {
                     min: 3,
                     optional: true
                 },
+                permissions: {
+                    type: "array",
+                    min: 1,
+                    optional: true
+                }
             }
 
             //buat object role
             let roleUpdateObj = {
                 name: req.body.name,
+                permissions: req.body.permissions
             }
 
             //validasi menggunakan module fastest-validator
@@ -128,11 +134,25 @@ module.exports = {
             }
 
             //update role
-            await Role.update(roleUpdateObj, {
+           const updateRole =  await Role.update(roleUpdateObj, {
                 where: {
                     id: req.params.id,
                 }
             })
+
+            //menghapus semua permission role
+            await RoleHasPermission.destroy({
+                where: {
+                    role_id: req.params.id
+                }
+            })
+
+            roleUpdateObj.permissions.forEach(async (item) => {
+                await RoleHasPermission.create({
+                    role_id: req.params.id,
+                    permission_id: item
+                });
+            });
 
             //mendapatkan data role setelah update
             let roleAfterUpdate = await Role.findOne({
