@@ -12,4 +12,5 @@ route.put('/vacancy/status/update/:slug', [mid.checkRolesAndLogout(['Super Admin
 route.put('/vacancy/update/:slug', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], vacancyController.updateVacancy); 
 route.delete('/vacancy/delete/:slug', [mid.checkRolesAndLogout(['Super Admin', 'Company'])], vacancyController.deleteVacancy);
 
+route.get('/vacancy/invitations/get', [mid.checkRoles()], vacancyController.getvacancyinvitations);
 module.exports = route;

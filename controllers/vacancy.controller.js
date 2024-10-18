@@ -15,14 +15,14 @@ module.exports = {
   createvacancy: async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-      const company = await Company.findOne({ 
+      const company = await Company.findOne({
         where: { user_id: auth.userId }
       });
-      
+
       // Mendapatkan semua atribut dari company dan mengecek kekosongan field yang wajib
-      const requiredFields = ['user_id', 'department', 'name', 'desc', 'address', 'numberEmployee', 'website', 'instagram' ,'imageLogo', 'imageBanner'];
+      const requiredFields = ['user_id', 'department', 'name', 'desc', 'address', 'numberEmployee', 'website', 'instagram', 'imageLogo', 'imageBanner'];
       const missingFields = requiredFields.filter(field => !company[field]);
-      
+
       if (missingFields.length > 0) {
         return res.status(400).json(response(400, `Company Profile tidak lengkap. Silahkan lengkapi field: ${missingFields.join(', ')}`));
       }
@@ -246,6 +246,100 @@ module.exports = {
       console.log(err);
     }
   },
+
+  getvacancyinvitations: async (req, res) => {
+    try {
+      let {
+        start_date, end_date, search, status, category_id, workLocation, jobType, educationLevel_id
+      } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
+      let vacancyGets;
+      let totalCount;
+
+      const whereCondition = {};
+      const whereCategory = {};
+      const whereEducationLevel = {};
+
+      if (category_id) {
+        whereCategory.id = { [Op.eq]: Number(category_id) };
+      }
+      if (educationLevel_id) {
+        whereEducationLevel.id = { [Op.eq]: Number(educationLevel_id) };
+      }
+      if (workLocation) {
+        whereCondition.workLocation = { [Op.eq]: workLocation };
+      }
+      if (jobType) {
+        whereCondition.jobType = { [Op.eq]: jobType };
+      }
+      if (search) {
+        whereCondition[Op.or] = [{ title: { [Op.iLike]: `%${search}%` } }];
+      }
+      if (status) {
+        whereCondition.isPublished = { [Op.eq]: status === 'published' ? 'true' : 'false' };
+      }
+
+      if (start_date && end_date) {
+        whereCondition.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
+      } else if (start_date) {
+        whereCondition.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
+      } else if (end_date) {
+        whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
+      }
+
+      const company = await Company.findOne({ where: { user_id: auth.userId } });
+      switch (auth.roleId) {
+        case 1:
+          console.log('role 1')
+          whereCondition.company_id = { [Op.eq]: company.id };
+          break;
+        case 2:
+          console.log('role 2')
+          whereCondition.isPublished = { [Op.eq]: 'true' };
+          break;
+        case 3:
+          console.log('role 3')
+          whereCondition.company_id = { [Op.eq]: company.id };
+          break;
+        default:
+          break;
+      }
+
+      [vacancyGets, totalCount] = await Promise.all([
+        Vacancy.findAll({
+          attributes: ['id', 'title', 'slug', 'workLocation', 'jobType', 'desc', 'applicationDeadline', 'salary', 'location', 'isPublished', 'createdAt', 'updatedAt'],
+          where: whereCondition,
+          limit: limit,
+          offset: offset,
+        }),
+        Vacancy.count({
+          where: whereCondition
+        })
+      ]);
+
+      if (vacancyGets.length === 0) {
+        res.status(404).json(response(404, 'vacancy not found'));
+        return;
+      }
+
+      const pagination = generatePagination(totalCount, page, limit, '/api/vacancy/get');
+
+      res.status(200).json({
+        status: 200,
+        message: 'success get vacancy',
+        data: vacancyGets,
+        pagination: pagination
+      });
+
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
   //mendapatkan data vacancy berdasarkan slug
   getvacancyBySlug: async (req, res) => {
     try {
@@ -445,7 +539,7 @@ module.exports = {
         where: { vacancy_id: vacancy.id },
         transaction: transaction
       });
-      
+
       await VacancyEducationLevel.destroy({
         where: { vacancy_id: vacancy.id },
         transaction: transaction
