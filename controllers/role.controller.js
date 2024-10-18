@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 const logger = require('../errorHandler/logger');
-const { Role } = require('../models');
+const { Role, RoleHasPermission, sequelize } = require('../models');
 const Validator = require("fastest-validator");
 const v = new Validator();
 
@@ -8,19 +8,18 @@ module.exports = {
 
     //membuat role
     createrole: async (req, res) => {
+        const transaction = await sequelize.transaction();
         try {
-
             //membuat schema untuk validasi
             const schema = {
-                name: {
-                    type: "string",
-                    min: 3,
-                },
+                name: { type: "string", min: 3, },
+                permissions: { type: "array", min: 1, }
             }
 
             //buat object role
             let roleCreateObj = {
                 name: req.body.name,
+                permissions: req.body.permissions
             }
 
             //validasi menggunakan module fastest-validator
@@ -32,9 +31,17 @@ module.exports = {
 
             //buat role
             let roleCreate = await Role.create(roleCreateObj);
-
+            
+            roleCreateObj.permissions.forEach(async (item) => {
+                await RoleHasPermission.create({
+                    role_id: roleCreate.id,
+                    permission_id: item
+                });
+            });
+            await transaction.commit();
             res.status(201).json(response(201, 'success create role', roleCreate));
         } catch (err) {
+            await transaction.rollback();
             logger.error(`Error : ${err}`);
             logger.error(`Error message: ${err.message}`);
             res.status(500).json(response(500, 'internal server error', err));

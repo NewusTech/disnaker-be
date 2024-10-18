@@ -121,7 +121,7 @@ module.exports = {
 
             const role = await Role.findOne({ where: { name: 'User' } });
             if (!role) return res.status(404).json(response(404, 'role not found'));
-            
+
             const schema = {
                 name: { type: "string", min: 3 },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
@@ -160,11 +160,11 @@ module.exports = {
 
             let user = await User.create(obj);
             if (user) {
-               user.profile = await UserProfile.create({ name: obj.name, user_id: user.id, slug: obj.slug });
+                user.profile = await UserProfile.create({ name: obj.name, user_id: user.id, slug: obj.slug });
             };
 
             const userResponse = {
-                id: user.id,    
+                id: user.id,
                 email: user.email,
                 name: user.profile.name,
                 slug: user.slug,
@@ -269,8 +269,8 @@ module.exports = {
             }, baseConfig.auth_secret, {
                 expiresIn: 864000 // time expired 
             });
-
             const permissions = user.Role.Permissions.map(permission => permission.name);
+
             // get permission
             res.status(200).json(response(200, 'login success', { token: token, permission: permissions }));
 
@@ -460,6 +460,26 @@ module.exports = {
                 pagination: pagination
             });
 
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    getDetailCompany: async (req, res) => {
+        try {
+            const user = await User.findOne({ where: { id: req.params.id } });
+            if (!user) {
+                return res.status(404).json(response(404, 'user not found'));
+            }
+            let company = await Company.findOne({ where: { user_id: user.id } });
+
+            if (!company) {
+                return res.status(404).json(response(404, 'company not found'));
+            }
+            company = { ...company.dataValues, email:user.email };
+
+            res.status(200).json(response(200, 'success get company', company));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);

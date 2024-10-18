@@ -6,6 +6,7 @@ const v = new Validator();
 const { Op, where } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 const logger = require('../errorHandler/logger');
+const { updateImageProfile } = require('./userprofile.controller');
 
 
 module.exports = {
@@ -25,4 +26,26 @@ module.exports = {
       console.log(err);
     }
   },
+  updateSnk: async (req, res) => {
+    try {
+      const schema = {
+        syarat: "string|required",
+      };
+      const obj = {
+        syarat: req.body.syarat,
+      };
+      const validate = v.validate(obj, schema);
+      if (validate.length > 0) {
+        return res.status(400).json(response(400, 'validation failed', validate));
+      }
+      await SyaratKetentuan.update(obj,{ where: { id: 1 } });
+      const snkAfterUpdate = await SyaratKetentuan.findOne({ where: { id: 1 } });
+      res.status(200).json(response(200, 'success update snk', snkAfterUpdate));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  }
 }

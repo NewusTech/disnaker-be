@@ -14,6 +14,7 @@ route.get('/users/get', [mid.checkWithPermissions(['Kelola User'])], userControl
 route.post('/users/create', [mid.checkWithPermissions(['Kelola User'])], userController.adminCreateUser);
 // route.post('/companies/create', [mid.checkWithPermissions(['Kelola User'])], userController.adminCreateCompany);
 route.get('/companies/get', [mid.checkWithPermissions(['Kelola User'])], userController.getCompany);
+route.get('/companies/get/:id', [mid.checkWithPermissions(['Kelola User'])], userController.getDetailCompany);
 route.get('/users/get/:slug', [mid.checkRolesAndLogout(['Kelola User'])], userController.getuserByslug);
 route.delete('/user/delete/:slug', [mid.checkRolesAndLogout(['Kelola User'])], userController.deleteuser);
 route.put('/account/status/update/:slug', [mid.checkWithPermissions(['Kelola User'])], userController.updateStatusAccount);
