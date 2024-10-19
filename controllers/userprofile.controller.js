@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Application, SavedVacancy, User, UserExperience, UserProfile, UserCertificate, UserEducationHistory, UserLink, Skill, Role, sequelize, UserOrganization, UserSkill } = require('../models');
+const { Application, Company, SavedVacancy, User, UserExperience, UserProfile, UserCertificate, UserEducationHistory, UserLink, Skill, Role, sequelize, UserOrganization, UserSkill } = require('../models');
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -813,9 +813,9 @@ module.exports = {
             }
 
             await UserProfile.update(req.body, { where: { slug: req.params.slug } });
-            
+
             const userprofileAfterUpdate = await UserProfile.findOne({ where: { slug: req.params.slug } });
-            
+
             res.status(200).json(response(200, 'success update userprofile', userprofileAfterUpdate));
         } catch (err) {
             logger.error(`Error : ${err}`);
@@ -970,11 +970,11 @@ module.exports = {
         try {
 
             const includeModels = [
-                { model: UserProfile},
+                { model: UserProfile },
                 { model: UserExperience },
-                { model: UserEducationHistory},
-                { model: UserOrganization},
-                { model: UserSkill},
+                { model: UserEducationHistory },
+                { model: UserOrganization },
+                { model: UserSkill },
                 { model: UserCertificate },
             ];
 
@@ -1046,5 +1046,114 @@ module.exports = {
         }
     },
 
+    getCompanyProfile: async (req, res) => {
+        try {
+            const whereCondition = { user_id: auth.userId };
+
+            const company = await Company.findOne({ where: whereCondition, include: [{ model: User, attributes: ['id', 'email', 'slug'] }] });
+            if (!company) {
+                return res.status(404).json(response(404, 'company not found'));
+            }
+
+            res.status(200).json(response(200, 'success get company profile', company));
+        } catch (err) {
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
+            res.status(500).json(response(500, 'internal server error', err.message));
+        }
+    },
+
+    updateCompany: async (req, res) => {
+        try {
+            const company = await Company.findOne({ where: { user_id: auth.userId } });
+            if (!company) {
+                return res.status(404).json(response(404, 'company not found'));
+            }
+
+            const schema = {
+                name: { type: "string", optional: true },
+                department: { type: "string", optional: true },
+                linkedin: { type: "string", optional: true },
+                instagram: { type: "string", optional: true },
+                numberEmployee: { type: "number", optional: true },
+                phone: { type: "string", optional: true },
+                address: { type: "string", optional: true },
+                desc: { type: "string", optional: true },
+                website: { type: "string", optional: true },
+                imageLogo: { type: "string", optional: true },
+                imageBanner: { type: "string", optional: true }
+            };
+
+            if (req.files) {
+                if (req.files.imageLogo) {
+                    const timestamp = new Date().getTime();
+                    const uniqueFileName = `${timestamp}-${req.files.imageLogo[0].originalname}`;
+
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${process.env.PATH_AWS}/file/imageLogo/${uniqueFileName}`,
+                        Body: req.files.imageLogo[0].buffer,
+                        ACL: 'public-read',
+                        ContentType: req.files.imageLogo[0].mimetype
+                    };
+
+                    const command = new PutObjectCommand(uploadParams);
+
+                    await s3Client.send(command);
+
+                    req.body.imageLogo = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+                }
+                if (req.files.imageBanner) {
+                    const timestamp = new Date().getTime();
+                    const uniqueFileName = `${timestamp}-${req.files.imageBanner[0].originalname}`;
+
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${process.env.PATH_AWS}/file/transkrip/${uniqueFileName}`,
+                        Body: req.files.imageBanner[0].buffer,
+                        ACL: 'public-read',
+                        ContentType: req.files.imageBanner[0].mimetype
+                    };
+                    const command = new PutObjectCommand(uploadParams);
+
+                    await s3Client.send(command);
+                    req.body.imageBanner = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+                }
+            }
+
+            const companyUpdateObj = {
+                name: req.body.name,
+                department: req.body.department,
+                numberEmployee: Number(req.body.numberEmployee),
+                linkedin: req.body.linkedin,
+                instagram: req.body.instagram,
+                phone: req.body.phone,
+                address: req.body.address,
+                desc: req.body.desc,
+                website: req.body.website,
+                imageLogo: req.body.imageLogo,
+                imageBanner: req.body.imageBanner
+            };
+
+            const validate = v.validate(companyUpdateObj, schema);
+            if (validate.length > 0) {
+                return res.status(400).json(response(400, 'validation failed', v.errors));
+            }
+
+            await Company.update(companyUpdateObj, {
+                where: {
+                    user_id: auth.userId,
+                },
+            });
+
+            const companyUpdate = await Company.findOne({ where: { user_id: auth.userId } });
+
+            res.status(200).json(response(200, 'success update company', companyUpdate));
+        } catch (err) {
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
+            res.status(500).json(response(500, 'internal server error', err.message));
+        }
+    }
 
 }

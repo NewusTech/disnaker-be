@@ -119,9 +119,6 @@ module.exports = {
             const userExist = await User.findOne({ where: { email: req.body.email } });
             if (userExist) return res.status(400).json(response(400, 'user already exist'));
 
-            const role = await Role.findOne({ where: { name: 'User' } });
-            if (!role) return res.status(404).json(response(404, 'role not found'));
-
             const schema = {
                 name: { type: "string", min: 3 },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
@@ -132,7 +129,7 @@ module.exports = {
             const obj = {
                 name: req.body.name,
                 password: req.body.password,
-                role_id: role.id,
+                role_id: Number(req.body.role_id),
                 email: req.body.email,
             };
 
