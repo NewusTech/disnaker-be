@@ -12,6 +12,7 @@ route.post('/logout', [mid.checkRolesAndLogout(['Super Admin'])], userController
 // API UNTUK ADMIN / SUPER ADMIN
 route.get('/users/get', [mid.checkWithPermissions(['Kelola User'])], userController.getuser);
 route.post('/account/create', [mid.checkWithPermissions(['Kelola User'])], userController.adminCreateUser);
+route.put('/account/update/:id', [mid.checkWithPermissions(['Kelola User'])], userController.adminUpdateUser);
 // route.post('/companies/create', [mid.checkWithPermissions(['Kelola User'])], userController.adminCreateCompany);
 route.get('/companies/get', [mid.checkWithPermissions(['Kelola User'])], userController.getCompany);
 route.get('/companies/get/:id', [mid.checkWithPermissions(['Kelola User'])], userController.getDetailCompany);

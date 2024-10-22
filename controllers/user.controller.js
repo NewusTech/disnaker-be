@@ -178,7 +178,37 @@ module.exports = {
             console.log(err);
         }
     },
+    adminUpdateUser: async (req, res) => {
+        try {
+            const userExist = await User.findOne({ where: { id: req.params.id } });
+            if (!userExist) return res.status(404).json(response(404, 'user not found'));
 
+            const schema = {
+                name: { type: "string", min: 3 },
+                role_id: { type: "number", optional: true, convert: true }
+            };
+
+            const obj = {
+                name: req.body.name,
+                role_id: req.body.role_id,
+            };
+
+            const validate = v.validate(obj, schema);
+            if (validate.length > 0) {
+                return res.status(400).json(response(400, 'validation failed', validate));
+            }
+
+            const user = await User.update(obj, { where: { id: req.params.id } });
+            const userProfile = await UserProfile.update(obj, { where: { user_id: req.params.id } });
+
+            return res.status(200).json(response(200, 'user updated'));
+        } catch (err) {
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
     //login user
     loginUser: async (req, res) => {
         try {
