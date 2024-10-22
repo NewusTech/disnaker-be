@@ -1075,7 +1075,7 @@ module.exports = {
                 department: { type: "string", optional: true },
                 linkedin: { type: "string", optional: true },
                 instagram: { type: "string", optional: true },
-                numberEmployee: { type: "number", optional: true },
+                numberEmployee: { type: "number", optional: true, convert: true },
                 phone: { type: "string", optional: true },
                 address: { type: "string", optional: true },
                 desc: { type: "string", optional: true },
@@ -1124,7 +1124,7 @@ module.exports = {
             const companyUpdateObj = {
                 name: req.body.name,
                 department: req.body.department,
-                numberEmployee: Number(req.body.numberEmployee),
+                numberEmployee: req.body.numberEmployee,
                 linkedin: req.body.linkedin,
                 instagram: req.body.instagram,
                 phone: req.body.phone,
@@ -1137,7 +1137,7 @@ module.exports = {
 
             const validate = v.validate(companyUpdateObj, schema);
             if (validate.length > 0) {
-                return res.status(400).json(response(400, 'validation failed', v.errors));
+                return res.status(400).json(response(400, 'validation failed', validate));
             }
 
             await Company.update(companyUpdateObj, {

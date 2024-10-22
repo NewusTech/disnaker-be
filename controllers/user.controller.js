@@ -462,6 +462,64 @@ module.exports = {
             console.log(err);
         }
     },
+    getAccount: async (req, res) => {
+        try {
+            let { search, status } = req.query;
+            const showDeleted = req.query.showDeleted ?? null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let userGets;
+            let totalCount;
+
+            const whereCondition = {};
+            const whereSearch = {};
+            if (search) {
+                whereSearch[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+            }
+            if (status) {
+                whereCondition.isActive = status === 'active' ? 'true' : 'false';
+            }
+
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
+            [userGets, totalCount] = await Promise.all([
+                User.findAll({
+                    include: [
+                        {
+                            model: Role,
+                            attributes: ['name', 'id'],
+                            as: 'Role',
+                            where: { name: 'Account' }
+                        },
+                        {
+                            model: UserProfile,
+                            as: 'UserProfile',
+                            where: whereSearch
+                        },
+                    ],
+                    limit: limit,
+                    offset: offset,
+                    order: [['id', 'ASC']],
+                    where: whereCondition,
+                }),
+                User.count({
+                    where: whereCondition
+                })
+            ]);
+
+
+        } catch (err) {
+            logger.error(`Error: ${err}`);
+            logger.error(`Error: ${err.message}`);
+            console.log(err);
+            res.status(500).json(response(500, 'internal server error', err));
+        }
+    },
 
     getDetailCompany: async (req, res) => {
         try {
@@ -474,7 +532,7 @@ module.exports = {
             if (!company) {
                 return res.status(404).json(response(404, 'company not found'));
             }
-            company = { ...company.dataValues, email:user.email };
+            company = { ...company.dataValues, email: user.email };
 
             res.status(200).json(response(200, 'success get company', company));
         } catch (err) {
