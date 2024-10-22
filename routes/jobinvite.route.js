@@ -8,6 +8,7 @@ const route = express.Router();
 route.post('/job/invitation/create', [mid.checkWithPermissions(['Kelola Pelamar'])], jobInviteController.invite);
 route.get('/job/invitation/get', [mid.checkWithPermissions(['Kelola Pelamar'])], jobInviteController.getInvitation); 
 route.get('/applicant/get', [mid.checkWithPermissions(['Kelola Pelamar'])], jobInviteController.getApplicant);
+route.get('/applicant/get/:id', [mid.checkWithPermissions(['Kelola Pelamar'])], jobInviteController.getDetailApplicant);
 route.get('/user/invitation/get', [mid.checkRolesAndLogout(['User'])], jobinviteController.getUserInvitation);
 route.get('/user/invitation/get/:id', [mid.checkRolesAndLogout(['User'])], jobinviteController.getUserInvitationById);
 route.put('/user/invitation/update/:id', [mid.checkRolesAndLogout(['User'])], jobinviteController.updateInvitation); 
