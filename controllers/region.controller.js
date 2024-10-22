@@ -72,7 +72,7 @@ module.exports = {
   },
   getKabupatens: async (req, res) => {
     try {
-      let { start_date, end_date, search } = req.query;
+      let { start_date, end_date, search, provinsi_id} = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
@@ -83,6 +83,9 @@ module.exports = {
 
       if (search) {
         whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+      }
+      if (provinsi_id) {
+        whereCondition.provinsiId = provinsi_id
       }
 
       if (start_date && end_date) {
@@ -123,7 +126,7 @@ module.exports = {
   
   getKecamatans: async (req, res) => {
     try {
-      let { start_date, end_date, search } = req.query;
+      let { start_date, end_date, search, kabupaten_id } = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
@@ -134,6 +137,10 @@ module.exports = {
 
       if (search) {
         whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+      }
+      
+      if (kabupaten_id) {
+        whereCondition.kabupatenId = kabupaten_id
       }
 
       if (start_date && end_date) {
@@ -173,7 +180,7 @@ module.exports = {
   },
   getKelurahans: async (req, res) => {
     try {
-      let { start_date, end_date, search } = req.query;
+      let { start_date, end_date, search, kecamatan_id} = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
@@ -184,6 +191,10 @@ module.exports = {
 
       if (search) {
         whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+      }
+
+      if (kecamatan_id) {
+        whereCondition.kecamatanId = kecamatan_id
       }
 
       if (start_date && end_date) {

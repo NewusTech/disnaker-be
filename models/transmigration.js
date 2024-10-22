@@ -56,5 +56,10 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   });
+  Transmigration.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['id', 'DESC']];
+    }
+  });
   return Transmigration;
 };

@@ -57,5 +57,10 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   });
+  YellowCard.addHook('beforeFind', (options) => {
+    if (!options.order) {
+      options.order = [['id', 'DESC']];
+    }
+  });
   return YellowCard;
 };

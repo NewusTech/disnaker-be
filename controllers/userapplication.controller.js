@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Application, Vacancy } = require('../models');
+const { Application, Vacancy, Company, EducationLevel } = require('../models');
 
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
@@ -55,7 +55,20 @@ module.exports = {
       const [userWithApplications, totalCount] = await Promise.all([
         Application.findAll({
           where: whereCondition,
-          include: [{ model: Vacancy }],
+          include: [
+            {
+              model: Vacancy,
+              include: [
+                {
+                  model: EducationLevel,
+                  attributes: ['id', 'level']
+                },
+                {
+                  model: Company,
+                }
+              ]
+            }
+          ],
           limit: limit,
           offset: offset
         }),

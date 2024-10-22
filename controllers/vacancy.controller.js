@@ -349,7 +349,7 @@ module.exports = {
       let vacancyGet = await Vacancy.findOne({
         where: whereCondition,
         include: [
-          { model: Company, attributes: ['id', 'name', 'imageLogo', 'imageBanner', 'desc', 'address', 'numberEmployee', 'website', 'instagram'] },
+          { model: Company, attributes: ['id', 'department', 'name', 'imageLogo', 'imageBanner', 'desc', 'address', 'numberEmployee', 'website', 'instagram'] },
           { model: VacancyCategory, attributes: ['id', 'name'] },
           { model: EducationLevel },
           { model: Skill, through: { attributes: [] } },
