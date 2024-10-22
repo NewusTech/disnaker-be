@@ -157,6 +157,54 @@ module.exports = {
       return res.status(500).json(response(500, 'internal server error', error));
     }
   },
+
+  getUserInvitationById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const jobInvitationGet = await JobInvitation.findOne({
+        where: { id: id, user_id: auth.userId }
+      });
+      if (!jobInvitationGet) {
+        return res.status(404).json(response(404, 'job invitation not found'));
+      }
+      return res.status(200).json(response(200, 'success get job invitation', jobInvitationGet));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      return res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
+
+  updateIsReading: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const jobInvitation = await JobInvitation.findByPk(id);
+
+      if (!jobInvitation) {
+        return res.status(404).json(response(404, 'job invitation not found'));
+      }
+
+      const whereCondition = {
+        id: id
+      };
+
+      const updateData = {
+        isReading: 'true'
+      };
+
+      await JobInvitation.update(updateData, {
+        where: whereCondition
+      });
+
+      return res.status(200).json(response(200, 'success update job invitation'));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      return res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
+
   updateInvitation: async (req, res) => {
     try {
       const { id } = req.params;
