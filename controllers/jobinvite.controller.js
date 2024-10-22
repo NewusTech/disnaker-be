@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { JobInvitation, Vacancy, User, Company, UserProfile } = require('../models');
+const { JobInvitation, Vacancy, User, Company, UserProfile, Skill, Role, UserEducationHistory, EducationLevel} = require('../models');
 const Validator = require("fastest-validator");
 const logger = require('../errorHandler/logger');
 const v = new Validator();
@@ -130,7 +130,7 @@ module.exports = {
           include: [{ model: Vacancy, }],
           limit: limit,
           offset: offset,
-          attributes: ['id', 'user_id', 'vacancy_id', 'createdAt', 'status', 'isReading', 'updatedAt'],
+          attributes: ['id', 'user_id', 'vacancy_id', 'desc', 'createdAt', 'status', 'isReading', 'updatedAt'],
           order: [['createdAt', 'DESC']]
         }),
         JobInvitation.count({
@@ -155,6 +155,83 @@ module.exports = {
       logger.error(`Error : ${error}`);
       logger.error(`Error message: ${error.message}`);
       return res.status(500).json(response(500, 'internal server error', error));
+    }
+  },
+
+  getApplicant: async (req, res) => {
+    try {
+      let { start_date, end_date, search } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
+      let applicantGets;
+      let totalCount;
+
+      const whereCondition = {};
+      const whereName = {};
+
+      whereCondition.role_id = 2;
+
+      if (search) {
+        whereCondition[Op.or] = [{ email: { [Op.iLike]: `%${search}%` } }];
+        whereName[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+      }
+
+      if (start_date && end_date) {
+        whereCondition.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
+      } else if (start_date) {
+        whereCondition.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
+      } else if (end_date) {
+        whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
+      }
+
+      [applicantGets, totalCount] = await Promise.all([
+        User.findAll({
+          include: [
+            {
+              model: UserProfile,
+              attributes: ['id', 'name', 'employmentStatus', 'about'],
+              where: whereName
+            },
+            {
+              model: Skill
+            },
+            {
+              model: UserEducationHistory,
+              include: [
+                EducationLevel
+              ]
+            },
+            {
+              model: Role,
+              attributes: ['id', 'name'],
+              where: { name: 'User' }
+            }
+          ],
+          where: whereCondition,
+          limit: limit,
+          offset: offset,
+          order: [['createdAt', 'DESC']]
+        }),
+        User.count({
+          where: whereCondition
+        })
+      ]);
+
+      const pagination = generatePagination(totalCount, limit, page);
+
+      res.status(200).json(
+        {
+          status: 200,
+          message: 'success get applicant',
+          data: applicantGets,
+          pagination: pagination
+        }
+      );
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      return res.status(500).json(response(500, 'internal server error', err));
     }
   },
 
