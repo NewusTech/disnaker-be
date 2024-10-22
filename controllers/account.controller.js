@@ -89,4 +89,61 @@ module.exports = {
       console.log(err);
     }
   },
+  getAccountById: async (req, res) => {
+    try {
+      const userGet = await User.findOne({
+        where: {
+          id: req.params.id
+        },
+        include: [
+          {
+            model: Role,
+            where: { id: { [Op.notIn]: [2, 3] } }
+          },
+          { model: UserProfile, where: { user_id: req.params.id }, },
+        ],
+        attributes: { exclude: ['Role', 'UserProfile'] },
+      });
+
+      res.status(200).json({
+        status: 200,
+        message: 'success get',
+        data: userGet
+      });
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
+  deleteAccount: async (req, res) => {
+    try {
+      //mendapatkan data user untuk pengecekan
+      let userGet = await User.findOne({
+        where: {
+          [Op.and]: [
+            { id: req.params.id },
+            { role_id: { [Op.notIn]: [1, 2, 3] } }
+          ]
+        }
+      })
+      if (!userGet) {
+        res.status(404).json(response(404, 'account not found'));
+        return;
+      }
+
+      await User.destroy({
+        where: {
+          id: req.params.id
+        }
+      })
+      res.status(200).json(response(200, 'success delete account'));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  }
 }

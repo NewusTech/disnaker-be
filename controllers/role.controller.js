@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 const logger = require('../errorHandler/logger');
-const { Role, RoleHasPermission, sequelize } = require('../models');
+const { Role, RoleHasPermission, Permission, sequelize } = require('../models');
 const Validator = require("fastest-validator");
 const v = new Validator();
 
@@ -53,7 +53,13 @@ module.exports = {
     getrole: async (req, res) => {
         try {
             //mendapatkan data semua role
-            let roleGets = await Role.findAll({});
+            let roleGets = await Role.findAll({
+                include: [
+                    {
+                        model: Permission
+                    }
+                ]
+            });
 
             res.status(200).json(response(200, 'success get role', roleGets));
 
@@ -73,6 +79,9 @@ module.exports = {
                 where: {
                     id: req.params.id
                 },
+                include: [{
+                    model: Permission
+                }]
             });
 
             //cek jika role tidak ada
