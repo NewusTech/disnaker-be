@@ -29,10 +29,10 @@ module.exports = {
   updateSnk: async (req, res) => {
     try {
       const schema = {
-        syarat: "string|required",
+        desc: "string|required",
       };
       const obj = {
-        syarat: req.body.syarat,
+        desc: req.body.desc,
       };
       const validate = v.validate(obj, schema);
       if (validate.length > 0) {
