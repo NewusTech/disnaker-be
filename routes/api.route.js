@@ -64,6 +64,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, certificationRoute);
     app.use(urlApi, accountRoute);
     app.use(urlApi, eventRoute);
+    app.use(urlApi, kebijakanprivasiRoute);
     app.use(urlApi, jobInviteRoute);
     app.use(urlApi, companyRoute);
     app.use(urlApi, informationRoute);
