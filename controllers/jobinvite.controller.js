@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { JobInvitation, Vacancy, User, Company, UserProfile, Skill, Role, UserEducationHistory, EducationLevel} = require('../models');
+const { JobInvitation, Vacancy, User, Company, UserProfile, UserExperience, UserLink, UserOrganization, UserCertificate, Skill, Role, UserEducationHistory, EducationLevel} = require('../models');
 const Validator = require("fastest-validator");
 const logger = require('../errorHandler/logger');
 const v = new Validator();
@@ -235,10 +235,39 @@ module.exports = {
     }
   },
 
+  getDetailApplicant: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const applicantGet = await User.findOne({
+        include: [
+          { model: UserProfile },
+          { model: UserExperience },
+          { model: UserEducationHistory, include: [EducationLevel] },
+          { model: UserOrganization },
+          { model: Skill },
+          { model: UserCertificate },
+          { model: UserLink },
+        ],
+        where: { id: id }
+      });
+      if (!applicantGet) {
+        return res.status(404).json(response(404, 'user not found'));
+      }
+      return res.status(200).json(response(200, 'success get applicant', applicantGet));
+    } catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      return res.status(500).json(response(500, 'internal server error', err));
+    }
+  },
+
   getUserInvitationById: async (req, res) => {
     try {
       const { id } = req.params;
       const jobInvitationGet = await JobInvitation.findOne({
+        include: [
+          { model: Vacancy }
+        ],
         where: { id: id, user_id: auth.userId }
       });
       if (!jobInvitationGet) {
