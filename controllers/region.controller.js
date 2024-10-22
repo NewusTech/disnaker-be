@@ -85,7 +85,7 @@ module.exports = {
         whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
       }
       if (provinsi_id) {
-        whereCondition.provinsiId = provinsi_id
+        whereCondition.provinsi_id = provinsi_id
       }
 
       if (start_date && end_date) {
@@ -138,9 +138,9 @@ module.exports = {
       if (search) {
         whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
       }
-      
+
       if (kabupaten_id) {
-        whereCondition.kabupatenId = kabupaten_id
+        whereCondition.kabupaten_id = kabupaten_id
       }
 
       if (start_date && end_date) {
@@ -194,7 +194,7 @@ module.exports = {
       }
 
       if (kecamatan_id) {
-        whereCondition.kecamatanId = kecamatan_id
+        whereCondition.kecamatan_id = kecamatan_id
       }
 
       if (start_date && end_date) {
