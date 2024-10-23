@@ -978,53 +978,99 @@ module.exports = {
                 { model: UserCertificate },
             ];
 
-            const [dataGets] = await Promise.all([
-                User.findAll({
-                    where: { id: 5 },
-                    include: includeModels,
-                    order: [['id', 'DESC']]
-                }),
-            ]);
+            const user = await User.findOne({
+                where: { id: 5 },
+                include: includeModels,
+                order: [['id', 'DESC']]
+            })
+
 
             // Generate HTML content for PDF
-            const templatePath = path.resolve(__dirname, '../views/cv.html');
+            const templatePath = path.resolve(__dirname, '../views/cv/cv.html');
+            const templateJobPath = path.resolve(__dirname, '../views/cv/job.html');
+            let jobContent = fs.readFileSync(templateJobPath, 'utf8');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
 
-            // const reportTableRows = dataGets?.map(data => {
-            //     const createdAtDate = new Date(data?.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-            //     const statusfix = data?.status === 1 ? 'Divalidasi' : data?.status === 2 ? 'Ditolak' : 'Belum Divalidasi';
+            htmlContent = htmlContent.replace('{{name}}', user.UserProfile.name);
+            htmlContent = htmlContent.replace('{{phoneNumber}}', user.UserProfile.phoneNumber);
+            htmlContent = htmlContent.replace('{{email}}', user.email);
+            htmlContent = htmlContent.replace('{{about}}', user.UserProfile.about);
+
+            // const reportTableRows = riwayatAntrian[0]?.map(antrian => {
+            //     const createdAtDate = new Date(antrian.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+            //     const createdAtTime = new Date(antrian.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            //     const updatedAtTime = new Date(antrian.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            //     const statusText = antrian.status ? 'Selesai' : 'Menunggu';
 
             //     return `
             //         <tr>
-            //             <td>${createdAtDate}</td>
-            //             <td>${statusfix}</td>
-            //             <td>${data?.id_toponim}</td>
-            //             <td>${data?.nama_lokal}</td>
-            //             <td>${data?.Kecamatan?.name}</td>
-            //             <td>${data?.Desa?.name}</td>
-            //             <td>${data?.Detailtoponim?.catatan ?? '-'}</td>
+            //             <td>${antrian.code}</td>
+            //             <td class="center">${createdAtDate}</td>
+            //             <td class="center">${createdAtTime} WIB</td>
+            //             <td class="center">${updatedAtTime} WIB</td>
+            //             <td class="center">${statusText}</td>
             //         </tr>
             //     `;
             // }).join('');
 
-            // htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+
+            // user.UserExperiences.map((experience) => {
+            //     jobContent = jobContent.replace('{{title}}', experience.title);
+            //     jobContent = jobContent.replace('{{companyName}}', experience.companyName);
+            //     jobContent = jobContent.replace('{{joinDate}}', experience.joinDate);
+            //     if(experience.isCurrently === 'true'){
+            //         jobContent = jobContent.replace('{{leaveDate}}', 'Sekarang');
+            //     } else {
+            //         jobContent = jobContent.replace('{{leaveDate}}', experience.leaveDate);
+            //     }
+            //     jobContent = jobContent.replace('{{desc}}', experience.desc);
+            // })
+
+            const templateJob = user.UserExperiences.map((experience) => {
+                let leaveDate;
+                if (experience.isCurrently === 'true') {
+                    leaveDate = 'Sekarang';
+                } else {
+                    leaveDate = experience.leaveDate;
+                }
+
+                return `
+                <div class="job">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="margin-top: 5px;">
+                            <p class="job-title">${experience.title}</p>
+                            <div style="margin-top: 5px !important;"></div>
+                            <p class="company-name" style="margin-top: 5px;">${experience.companyName}</p>
+                        </div>
+                        <p>${experience.joinDate} - ${leaveDate}</p>
+                    </div>
+                    ${experience.desc}
+                </div>
+                `
+            }).join('');
+
+
+            htmlContent = htmlContent.replace('{{templateJob}}', templateJob);
 
             // Launch Puppeteer
-            const browser = await puppeteer.launch();
+            const browser = await puppeteer.launch({
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
             const page = await browser.newPage();
 
             // Set HTML content
-            await page.setContent(`<p> Hello world </p>`, { waitUntil: 'networkidle0' });
+            await page.setContent(`${htmlContent}`, { waitUntil: 'networkidle0' });
 
             // Generate PDF
             const pdfBuffer = await page.pdf({
                 format: 'Legal',
                 landscape: false,
                 margin: {
-                    top: '1.16in',
-                    right: '1.16in',
-                    bottom: '1.16in',
-                    left: '1.16in'
+                    top: '20px',
+                    right: '15px',
+                    bottom: '20px',
+                    left: '25px'
                 }
             });
 
@@ -1032,12 +1078,12 @@ module.exports = {
 
             // Generate filename
             const currentDate = new Date().toISOString().replace(/:/g, '-');
-            const filename = `laporan-${currentDate}.pdf`;
+            const filename = `cv-${currentDate}.pdf`;
 
-            // Send PDF buffer
-            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
-            res.setHeader('Content-type', 'application/pdf');
-            res.send(pdfBuffer);
+            // Set headers dan kirim file PDF
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.setHeader('Content-Type', 'application/pdf');
+            res.end(pdfBuffer, 'binary');
 
         } catch (err) {
             logger.error(`Error : ${err}`);
