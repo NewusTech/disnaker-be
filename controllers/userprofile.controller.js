@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Application, Company, SavedVacancy, User, UserExperience, UserProfile, UserCertificate, UserEducationHistory, UserLink, Skill, Role, sequelize, UserOrganization, UserSkill } = require('../models');
+const { Application, Company, SavedVacancy, User, UserExperience, UserProfile, UserCertificate, UserEducationHistory, EducationLevel, UserLink, Skill, Role, sequelize, UserOrganization, UserSkill } = require('../models');
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -972,18 +972,18 @@ module.exports = {
             const includeModels = [
                 { model: UserProfile },
                 { model: UserExperience },
-                { model: UserEducationHistory },
+                { model: UserEducationHistory, include: [EducationLevel] },
                 { model: UserOrganization },
-                { model: UserSkill },
+                { model: Skill },
                 { model: UserCertificate },
             ];
 
             const user = await User.findOne({
-                where: { id: auth.userId},
+                where: { id: auth.userId },
                 include: includeModels,
                 order: [['id', 'DESC']]
             })
-
+            console.log(user.UserExperiences)
 
             // Generate HTML content for PDF
             const templatePath = path.resolve(__dirname, '../views/cv/cv.html');
@@ -995,37 +995,6 @@ module.exports = {
             htmlContent = htmlContent.replace('{{phoneNumber}}', user.UserProfile.phoneNumber);
             htmlContent = htmlContent.replace('{{email}}', user.email);
             htmlContent = htmlContent.replace('{{about}}', user.UserProfile.about);
-
-            // const reportTableRows = riwayatAntrian[0]?.map(antrian => {
-            //     const createdAtDate = new Date(antrian.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-            //     const createdAtTime = new Date(antrian.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-            //     const updatedAtTime = new Date(antrian.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-            //     const statusText = antrian.status ? 'Selesai' : 'Menunggu';
-
-            //     return `
-            //         <tr>
-            //             <td>${antrian.code}</td>
-            //             <td class="center">${createdAtDate}</td>
-            //             <td class="center">${createdAtTime} WIB</td>
-            //             <td class="center">${updatedAtTime} WIB</td>
-            //             <td class="center">${statusText}</td>
-            //         </tr>
-            //     `;
-            // }).join('');
-
-
-
-            // user.UserExperiences.map((experience) => {
-            //     jobContent = jobContent.replace('{{title}}', experience.title);
-            //     jobContent = jobContent.replace('{{companyName}}', experience.companyName);
-            //     jobContent = jobContent.replace('{{joinDate}}', experience.joinDate);
-            //     if(experience.isCurrently === 'true'){
-            //         jobContent = jobContent.replace('{{leaveDate}}', 'Sekarang');
-            //     } else {
-            //         jobContent = jobContent.replace('{{leaveDate}}', experience.leaveDate);
-            //     }
-            //     jobContent = jobContent.replace('{{desc}}', experience.desc);
-            // })
 
             const templateJob = user.UserExperiences.map((experience) => {
                 let leaveDate;
@@ -1040,11 +1009,12 @@ module.exports = {
                     <div style="display: flex; justify-content: space-between;">
                         <div style="margin-top: 5px;">
                             <p class="job-title">${experience.title}</p>
-                            <div style="margin-top: 5px !important;"></div>
-                            <p class="company-name" style="margin-top: 5px;">${experience.companyName}</p>
+                            <div style="margin-top: 3px !important;"></div>
+                            <p class="company-name">${experience.companyName}</p>
                         </div>
                         <p>${experience.joinDate} - ${leaveDate}</p>
                     </div>
+                    <div style="margin-top: 5px !important;"></div>
                     ${experience.desc}
                 </div>
                 `
@@ -1052,6 +1022,114 @@ module.exports = {
 
 
             htmlContent = htmlContent.replace('{{templateJob}}', templateJob);
+
+            const templateEducation = user.UserEducationHistories.map((education) => {
+                switch (education.EducationLevel.level) {
+                    case 'SMA':
+                        education.gpa = 'Nilai ' + education.gpa + '/100';
+                        break;
+                    case 'SMK':
+                        education.gpa = 'Nilai ' + education.gpa + '/100';
+                        break;
+                    case 'D3':
+                        education.gpa = 'IPK ' + education.gpa + '/4.00';
+                        break;
+                    case 'D4':
+                        education.gpa = 'IPK ' + education.gpa + '/4.00';
+                        break;
+                    case 'S1':
+                        education.gpa = 'IPK ' + education.gpa + '/4.00';
+                        break;
+                    case 'S2':
+                        education.gpa = 'IPK ' + education.gpa + '/4.00';
+                        break;
+                    case 'S3':
+                        education.gpa = 'IPK ' + education.gpa + '/4.00';
+                }
+
+                switch (education.EducationLevel.level) {
+                    case 'D3':
+                        education.EducationLevel.level = 'Diploma';
+                        break;
+                    case 'D4':
+                        education.EducationLevel.level = 'Sarjana Terapan';
+                        break;
+                    case 'S1':
+                        education.EducationLevel.level = 'Sarjana';
+                        break;
+                    case 'S2':
+                        education.EducationLevel.level = 'Magister';
+                        break;
+                    case 'S3':
+                        education.EducationLevel.level = 'Doktor';
+                        break;
+                }
+
+                let graduationDate;
+                if (education.isCurrently === 'true') {
+                    graduationDate = 'Sekarang';
+                } else {
+                    graduationDate = education.graduationDate;
+                }
+
+                return `
+                 <div class="education">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="margin-top: 5px;">
+                        <p class="job-title">${education.instanceName}</p>
+                        <div style="margin-top: 3px !important;"></div>
+                        <p class="company-name">${education.department} - ${education.EducationLevel.level}</p>
+                        <p class="company-name">${education.gpa}</p>
+                    </div>
+                <p>${education.joinDate} - ${graduationDate}</p>
+                    </div>
+                    <div style="margin-top: 5px !important;"></div>
+                ${education.desc}
+                </div>
+               `
+            }).join('');
+
+            htmlContent = htmlContent.replace('{{templateEducation}}', templateEducation);
+
+            const templateOrganization = user.UserOrganizations.map((org) => {
+                let leaveDate;
+                if (org.isCurrently === 'true') {
+                    leaveDate = 'Sekarang';
+                } else {
+                    leaveDate = org.leaveDate;
+                }
+
+                return `
+                <div class="job">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="margin-top: 5px;">
+                            <p class="job-title">${org.name}</p>
+                            <div style="margin-top: 3px !important;"></div>
+                            <p class="company-name">${org.organizationName}</p>
+                        </div>
+                        <p>${org.joinDate} - ${leaveDate}</p>
+                    </div>
+                    <div style="margin-top: 5px !important;"></div>
+                    ${org.desc}
+                </div>
+                `
+            }).join('');
+
+
+            htmlContent = htmlContent.replace('{{templateOrganization}}', templateOrganization);
+
+            let listSkill = "";
+            user.Skills.map((skill) => {
+                return listSkill += `${skill.name}, `
+            }).join('');
+            listSkill = listSkill.slice(0, -2);
+            htmlContent = htmlContent.replace('{{templateSkill}}', listSkill);
+
+            const templateCertificate = user.UserCertificates.map((certificate) => {
+                return `<li>${certificate.name} By ${certificate.organization}</li>` ?? ''
+            })
+
+            htmlContent = htmlContent.replace('{{templateCertificate}}', templateCertificate);
 
             // Launch Puppeteer
             const browser = await puppeteer.launch({
