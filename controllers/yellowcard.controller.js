@@ -1,10 +1,13 @@
 const { response } = require('../helpers/response.formatter');
-
-const { YellowCard, User, UserProfile, EducationLevel } = require('../models');
-
+const moment = require('moment');
+require('moment/locale/id');
+const { YellowCard, User, UserProfile, UserEducationHistory, EducationLevel } = require('../models');
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 const Validator = require("fastest-validator");
 const v = new Validator();
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 
 const logger = require('../errorHandler/logger');
@@ -232,6 +235,95 @@ module.exports = {
     }
   },
 
+  generateYellowCard: async (req, res) => {
+    try {
+      const yellowcard = await YellowCard.findOne({
+        where: [{ id: req.params.id }, { status: 'Terbit' }],
+        include: [
+          {
+            model: User,
+            include: [
+              { model: UserProfile },
+            ]
+          },
+          { model: EducationLevel },
+        ],
+      });
+      if (!yellowcard) {
+        return res.status(404).json(response(404, 'yellowcard not found'));
+      }
+
+      const templatePath = path.resolve(__dirname, '../views/kartu-kuning/kartu-kuning.html');
+      let htmlContent = fs.readFileSync(templatePath, 'utf8');
+      // Baca file gambar
+      const logoPath = path.resolve(__dirname, '../views/kartu-kuning/logo.png');
+      const logoBase64 = fs.readFileSync(logoPath, 'base64');
+
+      // Sisipkan base64 ke dalam template HTML
+      htmlContent = htmlContent.replace('{{logo}}', `data:image/png;base64,${logoBase64}`);
+
+      htmlContent = htmlContent.replace('{{submissionNumber}}', yellowcard.submissionNumber) ?? '';
+      htmlContent = htmlContent.replace('{{name}}', yellowcard.User.UserProfile.name) ?? '';
+      htmlContent = htmlContent.replace('{{email}}', yellowcard.User.email) ?? '';
+      htmlContent = htmlContent.replace('{{nik}}', yellowcard.User.UserProfile.nik) ?? '';
+      const birthDate = moment(yellowcard.User.UserProfile.birthDate).locale('id').format('DD MMMM YYYY');
+      htmlContent = htmlContent.replace('{{birthDate}}', birthDate) ?? '';
+      htmlContent = htmlContent.replace('{{birthPlace}}', yellowcard.User.UserProfile.birthPlace) ?? '';
+      htmlContent = htmlContent.replace('{{gender}}', yellowcard.User.UserProfile.gender) ?? '';
+      htmlContent = htmlContent.replace('{{gender}}', yellowcard.User.UserProfile.gender) ?? '';
+      htmlContent = htmlContent.replace('{{maritalStatus}}', yellowcard.User.UserProfile.maritalStatus) ?? '';
+      htmlContent = htmlContent.replace('{{maritalStatus}}', yellowcard.User.UserProfile.maritalStatus) ?? '';
+      htmlContent = htmlContent.replace('{{religion}}', yellowcard.User.UserProfile.religion) ?? '';
+      htmlContent = htmlContent.replace('{{religion}}', yellowcard.User.UserProfile.religion) ?? '';
+      htmlContent = htmlContent.replace('{{skills}}', yellowcard.skill) ?? '';
+      htmlContent = htmlContent.replace('{{alamat}}', yellowcard.User.UserProfile.address) ?? '';
+      htmlContent = htmlContent.replace('{{educationLevel}}', yellowcard.EducationLevel.level) ?? '';
+      const formattedDate = moment(yellowcard.createdAt).locale('id').format('DD MMMM YYYY');
+      htmlContent = htmlContent.replace('{{date}}', formattedDate) ?? '';
+      htmlContent = htmlContent.replace('{{nama_pj}}', "Nama Penanggung Jawab") ?? '';
+      htmlContent = htmlContent.replace('{{nip_pj}}', "1234567890123456") ?? '';
+      // Launch Puppeteer
+      const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      const page = await browser.newPage();
+
+      // Set HTML content
+      await page.setContent(`${htmlContent}`, { waitUntil: 'networkidle0' });
+
+      // Generate PDF
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        landscape: false,
+        margin: {
+          top: '20px',
+          right: '15px',
+          bottom: '20px',
+          left: '25px'
+        }
+      });
+
+      await browser.close();
+
+      // Generate filename
+      const currentDate = new Date().toISOString().replace(/:/g, '-');
+      const filename = `cv-${currentDate}.pdf`;
+
+      // Set headers dan kirim file PDF
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.end(pdfBuffer, 'binary');
+
+    } catch (error) {
+      logger.error(`Error : ${error}`);
+      logger.error(`Error message: ${error.message}`);
+      console.error('Error creating yellowcard:', error);
+      return res.status(500).json({
+        status: 500,
+        message: 'Internal Server Error'
+      });
+    }
+  },
   deleteYellowCard: async (req, res) => {
     try {
       const yellowcard = await YellowCard.findOne({ where: { id: req.params.id } });

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      /* margin: 3cm; */
+    }
+
+    .header,
+    .footer {
+      text-align: left;
+      margin-bottom: 25px;
+    }
+
+    .content {
+      margin-top: 20px;
+    }
+
+    .logo {
+      margin: 0;
+      width: 75px;
+      height: 95px;
+    }
+
+    .flex {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      /* Optional: adds some space between the logo and the text */
+    }
+
+    .flex .logo-container {
+      flex: 0 0 auto;
+      /* Only takes as much space as the logo needs */
+    }
+
+    .flex .text-container {
+      flex: 1;
+      /* This makes sure the text container takes up remaining space */
+      text-align: left;
+      /* Align text to the left inside the text container */
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .righttab {
+      text-align: right;
+    }
+    .text-md{
+      font-size: 18px;
+    }
+
+    .horizontal-line {
+      border-bottom: 3px solid black;
+      /* Adjust the thickness and color as needed */
+      margin: 10px 0;
+      /* Adjust margin as needed */
+    }
+
+    /* Added border style for table */
+    table {
+      font-family: Arial, sans-serif;
+      width: 100%;
+      /* Adjust width as needed */
+    }
+
+    p {
+      font-family: Arial, sans-serif;
+    }
+
+    .nospasi {
+      margin-bottom: 1px;
+      margin-top: 0px;
+      padding: 0px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      /* Align text to the left */
+    }
+
+    th {
+      background-color: #f2f2f2;
+      /* Add background color for table header */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header flex">
+    <div class="logo-container">
+      <img src="{{logo}}" class="logo" />
+    </div>
+    <div class="text-container">
+      <h2 class="center" style="margin-top: 0px; margin-bottom: 2px;">DINAS TENAGA KERJA</h2>
+      <h3 class="center" style="margin-top: 0px; margin-bottom: 2px;">Pemerintah Daerah Kabupaten Tanggamus</h3>
+      <p class="center" style="margin-top: 0px; margin-bottom: 2px;">KP. BARU, KEC KOTA AGUNG TIM., KABUPATEN TANGGAMUS,
+        LAMPUNG 35384</p>
+    </div>
+  </div>
+  <div class="horizontal-line"></div>
+  <div class="content">
+    <p class="center" style="font-size: 20px; margin-bottom: 50px;">Kartu Tanda Bukti Pendaftaran Pencari Kerja</p>
+  </div>
+  <table class="text-md" style="border-spacing: 0 10px;">
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">No. Pendafaran Pencaker</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{submissionNumber}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">NIK</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{nik}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Nama Lengkap</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{name}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Tempat, Tanggal Lahir</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{birthPlace}}, {{birthDate}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Jenis Kelamin</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{gender}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Status Perkawinan</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{maritalStatus}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Agama</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{religion}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Alamat Domisili</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{alamat}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Penidikan</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{educationLevel}}</td>
+    </tr>
+    <tr>
+      <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Keterampilan</td>
+      <td style="width: 65%; margin: 0; padding: 0;">: {{skills}}</td>
+    </tr>
+  </table>
+  <div style="margin-top: 85px;"></div>
+  <table>
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%;" class="center">Tanggamus, {{date}}</td>
+    </tr>
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%;" class="center">Kepala Dinas</td>
+    </tr>
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%; padding-top: 90px;" class="center">{{nama_pj}}</td>
+    </tr>
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%;" class="center">{{nip_pj}}</td>
+    </tr>
+  </table>
+</body>
+
+</html>
