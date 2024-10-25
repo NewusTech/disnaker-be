@@ -1,7 +1,12 @@
 const { response } = require('../helpers/response.formatter');
 
 const { Transmigration, TransmigrationMember, User, UserProfile, sequelize } = require('../models');
-
+const moment = require('moment');
+require('moment/locale/id');
+const puppeteer = require('puppeteer');
+const qrCode = require('qrcode');
+const fs = require('fs');
+const path = require('path');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { Op } = require('sequelize');
@@ -277,5 +282,108 @@ module.exports = {
       logger.error(`Error message: ${err.message}`);
       res.status(500).json(response(500, 'internal server error', err));
     }
-  }
+  },
+
+  generateTransmigration: async (req, res) => {
+    try {
+      const transmigration = await Transmigration.findOne({
+        where: [{ id: req.params.id }, { status: 'Terbit' }],
+        include: [
+          {
+            model: User,
+            include: [
+              { model: UserProfile },
+            ]
+          },
+        ],
+      });
+
+      if (!transmigration) {
+        return res.status(404).json(response(404, 'transmigration not found'));
+      }
+
+
+      // Data yang ingin dimasukkan ke QR code
+     
+
+      // Mengubah data menjadi string base64
+      const qrCodeString = Buffer.from(JSON.stringify(transmigration.submissionNumber)).toString('base64');
+
+      // Generate QR Code dalam format Data URL
+      const qrCodeDataUrl = await qrCode.toDataURL(qrCodeString);
+
+      const templatePath = path.resolve(__dirname, '../views/transmigrasi/transmigrasi.html');
+      let htmlContent = fs.readFileSync(templatePath, 'utf8');
+
+      htmlContent = htmlContent.replace('{{qrCode}}', qrCodeDataUrl);
+
+      // Baca file gambar
+      const logoPath = path.resolve(__dirname, '../views/kartu-kuning/logo.png');
+      const logoBase64 = fs.readFileSync(logoPath, 'base64');
+
+      // Sisipkan base64 ke dalam template HTML
+      htmlContent = htmlContent.replace('{{logo}}', `data:image/png;base64,${logoBase64}`);
+
+      htmlContent = htmlContent.replace('{{submissionNumber}}', transmigration.submissionNumber) ?? '';
+      // htmlContent = htmlContent.replace('{{name}}', transmigration.User.UserProfile.name) ?? '';
+      // htmlContent = htmlContent.replace('{{email}}', transmigration.User.email) ?? '';
+      // htmlContent = htmlContent.replace('{{nik}}', transmigration.User.UserProfile.nik) ?? '';
+      // const birthDate = moment(transmigration.User.UserProfile.birthDate).locale('id').format('DD MMMM YYYY');
+      // htmlContent = htmlContent.replace('{{birthDate}}', birthDate) ?? '';
+      // htmlContent = htmlContent.replace('{{birthPlace}}', transmigration.User.UserProfile.birthPlace) ?? '';
+      // htmlContent = htmlContent.replace('{{gender}}', transmigration.User.UserProfile.gender) ?? '';
+      // htmlContent = htmlContent.replace('{{gender}}', transmigration.User.UserProfile.gender) ?? '';
+      // htmlContent = htmlContent.replace('{{maritalStatus}}', transmigration.User.UserProfile.maritalStatus) ?? '';
+      // htmlContent = htmlContent.replace('{{maritalStatus}}', transmigration.User.UserProfile.maritalStatus) ?? '';
+      // htmlContent = htmlContent.replace('{{religion}}', transmigration.User.UserProfile.religion) ?? '';
+      // htmlContent = htmlContent.replace('{{religion}}', transmigration.User.UserProfile.religion) ?? '';
+      // htmlContent = htmlContent.replace('{{skills}}', transmigration.skill) ?? '';
+      // htmlContent = htmlContent.replace('{{alamat}}', transmigration.User.UserProfile.address) ?? '';
+      // htmlContent = htmlContent.replace('{{educationLevel}}', transmigration.EducationLevel.level) ?? '';
+      // const formattedDate = moment(transmigration.createdAt).locale('id').format('DD MMMM YYYY');
+      // htmlContent = htmlContent.replace('{{date}}', formattedDate) ?? '';
+      // htmlContent = htmlContent.replace('{{nama_pj}}', "Nama Penanggung Jawab") ?? '';
+      // htmlContent = htmlContent.replace('{{nip_pj}}', "1234567890123456") ?? '';
+      // // Launch Puppeteer
+      const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      const page = await browser.newPage();
+
+      // Set HTML content
+      await page.setContent(`${htmlContent}`, { waitUntil: 'networkidle0' });
+
+      // Generate PDF
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        landscape: false,
+        margin: {
+          top: '20px',
+          right: '15px',
+          bottom: '20px',
+          left: '25px'
+        }
+      });
+
+      await browser.close();
+
+      // Generate filename
+      const currentDate = new Date().toISOString().replace(/:/g, '-');
+      const filename = `cv-${currentDate}.pdf`;
+
+      // Set headers dan kirim file PDF
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.end(pdfBuffer, 'binary');
+
+    } catch (error) {
+      logger.error(`Error : ${error}`);
+      logger.error(`Error message: ${error.message}`);
+      console.error('Error creating transmigration:', error);
+      return res.status(500).json({
+        status: 500,
+        message: 'Internal Server Error'
+      });
+    }
+  },
 }

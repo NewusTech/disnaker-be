@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      /* margin: 3cm; */
+    }
+
+    .anggota-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .anggota-table th,
+    .anggota-table td {
+      padding: 5px;
+      text-align: left;
+      border: 1px solid black;
+    }
+
+    .anggota-table th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    .header,
+    .footer {
+      text-align: left;
+    }
+
+    .content {
+      margin-top: 10px;
+    }
+
+    .logo {
+      margin: 0;
+      width: 75px;
+      height: 95px;
+    }
+
+    .flex {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      /* Optional: adds some space between the logo and the text */
+    }
+
+    .flex .logo-container {
+      flex: 0 0 auto;
+      /* Only takes as much space as the logo needs */
+    }
+
+    .flex .text-container {
+      flex: 1;
+      /* This makes sure the text container takes up remaining space */
+      text-align: left;
+      /* Align text to the left inside the text container */
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .righttab {
+      text-align: right;
+    }
+
+    .text-md {
+      font-size: 18px;
+    }
+
+    .horizontal-line {
+      border-bottom: 3px solid black;
+      /* Adjust the thickness and color as needed */
+      margin: 10px 0;
+      /* Adjust margin as needed */
+    }
+
+    /* Added border style for table */
+    table {
+      font-family: Arial, sans-serif;
+      width: 100%;
+      /* Adjust width as needed */
+    }
+
+    p {
+      font-family: Arial, sans-serif;
+    }
+
+    .anggota-table {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 10px;
+    }
+
+
+    .nospasi {
+      margin-bottom: 1px;
+      margin-top: 0px;
+      padding: 0px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      /* Align text to the left */
+    }
+
+    th {
+      background-color: #f2f2f2;
+      /* Add background color for table header */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header flex">
+    <div class="logo-container">
+      <img src="{{logo}}" class="logo" />
+    </div>
+    <div class="text-container">
+      <h2 class="center" style="margin-top: 0px; margin-bottom: 2px;">DINAS TENAGA KERJA</h2>
+      <h3 class="center" style="margin-top: 0px; margin-bottom: 2px;">Pemerintah Daerah Kabupaten Tanggamus</h3>
+      <p class="center" style="margin-top: 0px; margin-bottom: 2px;">KP. BARU, KEC KOTA AGUNG TIM., KABUPATEN TANGGAMUS,
+        LAMPUNG 35384</p>
+    </div>
+  </div>
+  <div class="horizontal-line"></div>
+  <div class="content">
+    <p>
+    <div class="center" style="font-size: 20px;">Nota Pengambilan Berkas Transmigrasi</div>
+    <div class="center" style="font-size: 20px; margin-top: 5px;">Nomor Pengajuan: {{submissionNumber}}</div>
+    </p>
+    <div style="display: flex; justify-content: center">
+      <img src="{{qrCode}}" style="width: 175px; height: 175px">
+    </div>
+  </div>
+  <div>
+
+    <!-- Section Pemohon -->
+    <h2 style="margin: 0; padding: 0;">Pemohon</h2>
+    <table class="text-md" style="border-spacing: 0 10px; width: 70%;">
+      <tr>
+        <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">NIK</td>
+        <td style="width: 65%; margin: 0; padding: 0;">: {{nik}}</td>
+      </tr>
+      <tr>
+        <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Nama</td>
+        <td style="width: 65%; margin: 0; padding: 0;">: {{name}}</td>
+      </tr>
+      <tr>
+        <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Tanggal Pengajuan</td>
+        <td style="width: 65%; margin: 0; padding: 0;">: {{createdAt}}</td>
+      </tr>
+    </table>
+    <div class="horizontal-line" style="border-bottom: 1px solid grey;"></div>
+
+    <!-- Section Rincian -->
+    <div style="margin-top: 20px;"></div>
+    <h2 style="margin: 0; padding: 0;">Rincian</h2>
+    <table class="text-md" style="border-spacing: 0 10px; width: 70%;">
+      <tr>
+        <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Alamat Domisili</td>
+        <td style="width: 65%; margin: 0; padding: 0;">: {{domicile}}</td>
+      </tr>
+      <tr>
+        <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Lokasi Transmigrasi</td>
+        <td style="width: 65%; margin: 0; padding: 0;">: {{location}}</td>
+      </tr>
+      <tr>
+        <td style="width: 35%; margin: 0; padding: 0; font-weight: bold;">Jumlah Jiwa</td>
+        <td style="width: 65%; margin: 0; padding: 0;">: {{countMember}}</td>
+      </tr>
+    </table>
+    <div class="horizontal-line" style="border-bottom: 1px solid grey;"></div>
+
+    <!-- Section Anggota Jiwa -->
+    <div style="margin-top: 20px;"></div>
+    <h2 style="margin-bottom: 15px; padding: 0;">Anggota</h2>
+    <table class="text-md anggota-table" style="border-spacing: 0 10px;">
+      <thead>
+        <td style="width:25%; font-weight: bold;">NIK</td>
+        <td style="width:25%; font-weight: bold;">Nama</td>
+        <td style="width:25%; font-weight: bold;">Jenis Kelamin</td>
+        <td style="width:25%; font-weight: bold;">Status KK</td>
+      </thead>
+      <tr>
+        <td style="width: 25%;">Heru</td>
+        <td style="width: 25%;">131212518512412</td>
+        <td style="width: 25%;">Laki-Laki</td>
+        <td style="width: 25%;">Suami</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="margin-top: 50px;"></div>
+  <table class="" style="border-collapse: collapse;">
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%;" class="center">Tanggamus, {{date}}</td>
+    </tr>
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%;" class="center">Kepala Dinas</td>
+    </tr>
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%; padding-top: 90px;" class="center">{{nama_pj}}</td>
+    </tr>
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%;" class="center">{{nip_pj}}</td>
+    </tr>
+  </table>
+</body>
+
+</html>
