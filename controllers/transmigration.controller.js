@@ -295,6 +295,7 @@ module.exports = {
               { model: UserProfile },
             ]
           },
+          { model: TransmigrationMember, },
         ],
       });
 
@@ -304,7 +305,7 @@ module.exports = {
 
 
       // Data yang ingin dimasukkan ke QR code
-     
+
 
       // Mengubah data menjadi string base64
       const qrCodeString = Buffer.from(JSON.stringify(transmigration.submissionNumber)).toString('base64');
@@ -323,28 +324,38 @@ module.exports = {
 
       // Sisipkan base64 ke dalam template HTML
       htmlContent = htmlContent.replace('{{logo}}', `data:image/png;base64,${logoBase64}`);
-
+      
+      // replacing data
       htmlContent = htmlContent.replace('{{submissionNumber}}', transmigration.submissionNumber) ?? '';
-      // htmlContent = htmlContent.replace('{{name}}', transmigration.User.UserProfile.name) ?? '';
-      // htmlContent = htmlContent.replace('{{email}}', transmigration.User.email) ?? '';
-      // htmlContent = htmlContent.replace('{{nik}}', transmigration.User.UserProfile.nik) ?? '';
-      // const birthDate = moment(transmigration.User.UserProfile.birthDate).locale('id').format('DD MMMM YYYY');
-      // htmlContent = htmlContent.replace('{{birthDate}}', birthDate) ?? '';
-      // htmlContent = htmlContent.replace('{{birthPlace}}', transmigration.User.UserProfile.birthPlace) ?? '';
-      // htmlContent = htmlContent.replace('{{gender}}', transmigration.User.UserProfile.gender) ?? '';
-      // htmlContent = htmlContent.replace('{{gender}}', transmigration.User.UserProfile.gender) ?? '';
-      // htmlContent = htmlContent.replace('{{maritalStatus}}', transmigration.User.UserProfile.maritalStatus) ?? '';
-      // htmlContent = htmlContent.replace('{{maritalStatus}}', transmigration.User.UserProfile.maritalStatus) ?? '';
-      // htmlContent = htmlContent.replace('{{religion}}', transmigration.User.UserProfile.religion) ?? '';
-      // htmlContent = htmlContent.replace('{{religion}}', transmigration.User.UserProfile.religion) ?? '';
-      // htmlContent = htmlContent.replace('{{skills}}', transmigration.skill) ?? '';
-      // htmlContent = htmlContent.replace('{{alamat}}', transmigration.User.UserProfile.address) ?? '';
-      // htmlContent = htmlContent.replace('{{educationLevel}}', transmigration.EducationLevel.level) ?? '';
-      // const formattedDate = moment(transmigration.createdAt).locale('id').format('DD MMMM YYYY');
-      // htmlContent = htmlContent.replace('{{date}}', formattedDate) ?? '';
-      // htmlContent = htmlContent.replace('{{nama_pj}}', "Nama Penanggung Jawab") ?? '';
-      // htmlContent = htmlContent.replace('{{nip_pj}}', "1234567890123456") ?? '';
-      // // Launch Puppeteer
+      htmlContent = htmlContent.replace('{{name}}', transmigration.User.UserProfile.name) ?? '';
+      htmlContent = htmlContent.replace('{{nik}}', transmigration.User.UserProfile.nik) ?? '';
+      const createdAt = moment(transmigration.createdAt).locale('id').format('DD MMMM YYYY');
+      htmlContent = htmlContent.replace('{{createdAt}}', createdAt) ?? '';
+      htmlContent = htmlContent.replace('{{domicile}}', transmigration.domicile) ?? '';
+      const location = transmigration.kabupaten + ', ' + transmigration.provinsi;
+      htmlContent = htmlContent.replace('{{location}}', location) ?? '';
+      const countMember = transmigration.TransmigrationMembers.length;
+      htmlContent = htmlContent.replace('{{countMember}}', countMember) ?? '';
+      htmlContent = htmlContent.replace('{{date}}', createdAt) ?? '';
+      htmlContent = htmlContent.replace('{{nama_pj}}', 'Nama PJ') ?? '';
+      htmlContent = htmlContent.replace('{{nip_pj}}', 'Nip PJ') ?? '';
+
+      // looping member data and return into html component
+      const transmigrationMember = transmigration.TransmigrationMembers.map((member) => {
+        return `
+        <tr>
+          <td style="width: 25%;">${member.name}</td>
+          <td style="width: 25%;">${member.nik}</td>
+          <td style="width: 25%;">${member.gender}</td>
+          <td style="width: 25%;">${member.familyStatus}</td>
+        </tr>
+        `
+      }).join('');
+
+
+      htmlContent = htmlContent.replace('{{trasmigrationMember}}', transmigrationMember) ?? '';
+      
+      // Launch Puppeteer
       const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
