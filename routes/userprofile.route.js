@@ -18,7 +18,7 @@ route.put('/user/profile/update/:slug', [mid.checkRolesAndLogout(['User'])], mul
 route.put('/user/about/update/:slug', [mid.checkRolesAndLogout(['User'])], userprofileController.updateaboutuser);
 route.put('/user/image-profile/update/:slug', [mid.checkRolesAndLogout(['User'])], upload.single('image'), userprofileController.updateImageProfile);
 route.put('/user/cv-portfolio/upload/:slug', [mid.checkRolesAndLogout(['User'])], upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'portfolio', maxCount: 1 }]), userprofileController.uploadDocCvPortfolio);
-route.get('/user/cv/generate', [mid.checkRolesAndLogout(['User'])], userprofileController.generateCv);
+route.get('/user/cv/generate/:id', [mid.checkRolesAndLogout(['User, Company, Super Admin'])], userprofileController.generateCv);
 route.get('/company/profile/get', [mid.checkRolesAndLogout(['Company', 'Super Admin'])], userprofileController.getCompanyProfile);
 route.put('/company/profile/update', [mid.checkRolesAndLogout(['Company', 'Super Admin'])], upload.fields([{ name: 'imageLogo', maxCount: 1 }, { name: 'imageBanner', maxCount: 1 }]), userprofileController.updateCompany);
 // route.put('/userprofile/updatefoto/:slug', [mid.checkRolesAndLogout(['Super Admin'])], upload.single('fotoprofil'), userprofileController.updateprofil); 
