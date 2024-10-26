@@ -14,6 +14,6 @@ route.get('/transmigration/get', [mid.checkRoles()], transmigrationController.ge
 route.get('/transmigration/get/:id', [mid.checkRoles()], transmigrationController.getTransmigrationById);
 route.put('/transmigration/update/:id', [mid.checkRolesAndLogout(['Super Admin'])], transmigrationController.updateTransmigration);
 route.delete('/transmigration/delete/:id', [mid.checkRolesAndLogout(['Super Admin'])], transmigrationController.deleteTransmigration);
-route.get('/transmigration/generate/:id', [mid.checkRolesAndLogout(['User'])], transmigrationController.generateTransmigration);
+route.get('/transmigration/generate/:id', [mid.checkRolesAndLogout(['User', 'Super Admin'])], transmigrationController.generateTransmigration);
 
 module.exports = route;

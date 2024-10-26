@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, UserProfile, Role } = require('../models');
+const { User, Jabatan, UserProfile, Role } = require('../models');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { Op, where } = require('sequelize');
@@ -44,6 +44,9 @@ module.exports = {
               where: { id: { [Op.notIn]: [2, 3] } }
             },
             {
+              model: Jabatan,
+            },
+            {
               model: UserProfile,
               as: 'UserProfile',
               where: whereSearch
@@ -65,6 +68,8 @@ module.exports = {
           id: user.id,
           slug: user.slug,
           name: user.UserProfile?.name,
+          jabatan: user.Jabatan?.name,
+          nip: user.Jabatan?.nip,
           email: user.email,
           role_id: user.Role?.id,
           role_name: user.Role?.name,
@@ -100,6 +105,7 @@ module.exports = {
             model: Role,
             where: { id: { [Op.notIn]: [2, 3] } }
           },
+          { model: Jabatan },
           { model: UserProfile, where: { user_id: req.params.id }, },
         ],
         attributes: { exclude: ['Role', 'UserProfile'] },
