@@ -1,21 +1,21 @@
 # konfigurasi umum projek
 
 # WAJIB
-WEB_NAME = "NEWUS"
-PORT = "3000"
+WEB_NAME =
+PORT =
 
 # URL LOKAL
-BASE_URL = "http://localhost:3000"
+BASE_URL =
 
 # auth secret untuk JWT
-AUTH_SECRET = "3#uRn&G##1s!9$tR0nGu"
+AUTH_SECRET =
 
 # konfigurasi database
-DB_USERNAME = "postgres"
-DB_PASSWORD = ""
-DB_HOST = "127.0.0.1"
-DB_DIALECT = "postgres"
-DB_NAME_DEVELOPMENT = "newus"
+DB_USERNAME =
+DB_PASSWORD =
+DB_HOST = 
+DB_DIALECT =
+DB_NAME_DEVELOPMENT =
 DB_NAME_TEST = 
 DB_NAME_PRODUCTION =
 
@@ -37,13 +37,13 @@ AWS_S3_BUCKET=""
 
 # PATH AWS, PAKE _lokal KALO MASIH DILOKAL
 # PATH_AWS = "newus"
-PATH_AWS = "newus_lokal"
+PATH_AWS = 
 
 # ENV UNTUK SEND MESSAGE TO GOOGLE
 EMAIL_NAME = ''
 EMAIL_PW = ''
 
 # Redis Configuration
-REDIS_HOST="127.0.0.1"
-REDIS_PORT="6379"
+REDIS_HOST=
+REDIS_PORT=
 REDIS_PASSWORD=

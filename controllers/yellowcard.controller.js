@@ -1,7 +1,7 @@
 const { response } = require('../helpers/response.formatter');
 const moment = require('moment');
 require('moment/locale/id');
-const { YellowCard, User, UserProfile, UserEducationHistory, EducationLevel } = require('../models');
+const { YellowCard, User, UserProfile, Jabatan, UserEducationHistory, EducationLevel } = require('../models');
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -253,6 +253,20 @@ module.exports = {
         return res.status(404).json(response(404, 'yellowcard not found'));
       }
 
+      const jabatan = await Jabatan.findOne({
+        include: {
+          model: User,
+          include: {
+            model: UserProfile
+          }
+        },
+        where: { name: { [Op.iLike]: `%Kepala Dinas%` } }
+      });
+
+      if (!jabatan) {
+        return res.status(404).json(response(404, 'User Dengan Jabatan Kepala Dinas Tidak Ditemukan'));
+      }
+
       const templatePath = path.resolve(__dirname, '../views/kartu-kuning/kartu-kuning.html');
       let htmlContent = fs.readFileSync(templatePath, 'utf8');
       // Baca file gambar
@@ -278,8 +292,8 @@ module.exports = {
       htmlContent = htmlContent.replace('{{educationLevel}}', yellowcard.EducationLevel.level) ?? '';
       const formattedDate = moment(yellowcard.createdAt).locale('id').format('DD MMMM YYYY');
       htmlContent = htmlContent.replace('{{date}}', formattedDate) ?? '';
-      htmlContent = htmlContent.replace('{{nama_pj}}', "Nama Penanggung Jawab") ?? '';
-      htmlContent = htmlContent.replace('{{nip_pj}}', "1234567890123456") ?? '';
+      htmlContent = htmlContent.replace('{{nama_pj}}', jabatan.User.UserProfile.name) ?? '';
+      htmlContent = htmlContent.replace('{{nip_pj}}', jabatan.nip) ?? '';
       // Launch Puppeteer
       const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox']
