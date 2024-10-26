@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Transmigration, TransmigrationMember, User, UserProfile, sequelize } = require('../models');
+const { Transmigration, TransmigrationMember, User, Jabatan, UserProfile, sequelize } = require('../models');
 const moment = require('moment');
 require('moment/locale/id');
 const puppeteer = require('puppeteer');
@@ -15,6 +15,7 @@ const { generatePagination } = require('../pagination/pagination');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const logger = require('../errorHandler/logger');
 const { min } = require('moment-timezone');
+const { name } = require('ejs');
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -303,9 +304,19 @@ module.exports = {
         return res.status(404).json(response(404, 'transmigration not found'));
       }
 
+      const jabatan = await Jabatan.findOne({
+        include: {
+          model: User,
+          include: {
+            model: UserProfile
+          }
+        }, 
+        where: { name: { [Op.iLike]: `%Kepala Dinas%` } }
+      });
 
-      // Data yang ingin dimasukkan ke QR code
-
+      if (!jabatan) {
+        return res.status(404).json(response(404, 'User Dengan Jabatan Kepala Dinas Tidak Ditemukan'));
+      }
 
       // Mengubah data menjadi string base64
       const qrCodeString = Buffer.from(JSON.stringify(transmigration.submissionNumber)).toString('base64');
@@ -318,13 +329,22 @@ module.exports = {
 
       htmlContent = htmlContent.replace('{{qrCode}}', qrCodeDataUrl);
 
+      const dataSign = {
+        name: jabatan.User.UserProfile.name,
+        nik: jabatan.nip
+      }
+      const qrCodeSign = Buffer.from(JSON.stringify(dataSign)).toString('base64');
+
+      const qrCodeSignDataUrl= await qrCode.toDataURL(qrCodeSign);
+      htmlContent = htmlContent.replace('{{qrCodeSign}}', qrCodeSignDataUrl);
+
       // Baca file gambar
       const logoPath = path.resolve(__dirname, '../views/kartu-kuning/logo.png');
       const logoBase64 = fs.readFileSync(logoPath, 'base64');
 
       // Sisipkan base64 ke dalam template HTML
       htmlContent = htmlContent.replace('{{logo}}', `data:image/png;base64,${logoBase64}`);
-      
+
       // replacing data
       htmlContent = htmlContent.replace('{{submissionNumber}}', transmigration.submissionNumber) ?? '';
       htmlContent = htmlContent.replace('{{name}}', transmigration.User.UserProfile.name) ?? '';
@@ -337,8 +357,8 @@ module.exports = {
       const countMember = transmigration.TransmigrationMembers.length;
       htmlContent = htmlContent.replace('{{countMember}}', countMember) ?? '';
       htmlContent = htmlContent.replace('{{date}}', createdAt) ?? '';
-      htmlContent = htmlContent.replace('{{nama_pj}}', 'Nama PJ') ?? '';
-      htmlContent = htmlContent.replace('{{nip_pj}}', 'Nip PJ') ?? '';
+      htmlContent = htmlContent.replace('{{nama_pj}}', jabatan.User.UserProfile.name) ?? '';
+      htmlContent = htmlContent.replace('{{nip_pj}}', jabatan.nip) ?? '';
 
       // looping member data and return into html component
       const transmigrationMember = transmigration.TransmigrationMembers.map((member) => {
@@ -354,7 +374,7 @@ module.exports = {
 
 
       htmlContent = htmlContent.replace('{{trasmigrationMember}}', transmigrationMember) ?? '';
-      
+
       // Launch Puppeteer
       const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox']
