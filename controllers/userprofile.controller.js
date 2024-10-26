@@ -979,7 +979,7 @@ module.exports = {
             ];
 
             const user = await User.findOne({
-                where: { id: auth.userId },
+                where: { id: req.params.id },
                 include: includeModels,
                 order: [['id', 'DESC']]
             })
