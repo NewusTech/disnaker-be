@@ -344,8 +344,8 @@ module.exports = {
       const transmigrationMember = transmigration.TransmigrationMembers.map((member) => {
         return `
         <tr>
-          <td style="width: 25%;">${member.name}</td>
           <td style="width: 25%;">${member.nik}</td>
+          <td style="width: 25%;">${member.name}</td>
           <td style="width: 25%;">${member.gender}</td>
           <td style="width: 25%;">${member.familyStatus}</td>
         </tr>

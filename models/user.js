@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'role_id',
       });
 
+      User.hasOne(models.Jabatan, {
+        foreignKey: 'user_id',
+      });
+
       User.hasOne(models.Company, {
         foreignKey: 'user_id',
       });

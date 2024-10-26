@@ -14,6 +14,6 @@ route.get('/yellowcard/get', [mid.checkRoles()], yellowcardController.getYellowC
 route.get('/yellowcard/get/:id', [mid.checkRoles()], yellowcardController.getYellowCardById);
 route.put('/yellowcard/update/:id', [mid.checkRolesAndLogout(['Super Admin'])], yellowcardController.updateYellowCard);
 route.delete('/yellowcard/delete/:id', [mid.checkRolesAndLogout(['Super Admin'])], yellowcardController.deleteYellowCard);
-route.get('/yellowcard/generate/:id', [mid.checkRolesAndLogout(['User'])], yellowcardController.generateYellowCard);
+route.get('/yellowcard/generate/:id', [mid.checkRolesAndLogout(['User', 'Super Admin'])], yellowcardController.generateYellowCard);
 
 module.exports = route;

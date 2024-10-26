@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Token, Role, Company, UserProfile, Userpermission, Permission, sequelize } = require('../models');
+const { User, Token, Role, Jabatan, Company, UserProfile, Userpermission, Permission, sequelize } = require('../models');
 const baseConfig = require('../config/base.config');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
@@ -115,6 +115,7 @@ module.exports = {
     },
 
     adminCreateUser: async (req, res) => {
+        const transaction = await sequelize.transaction();
         try {
             const userExist = await User.findOne({ where: { email: req.body.email } });
             if (userExist) return res.status(400).json(response(400, 'user already exist'));
@@ -122,6 +123,8 @@ module.exports = {
             const schema = {
                 name: { type: "string", min: 3 },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                jabatan: { type: "string", min: 5, },
+                nip: { type: "string", min: 5, },
                 password: { type: "string", min: 5, max: 16 },
                 role_id: { type: "number", optional: true }
             };
@@ -129,6 +132,8 @@ module.exports = {
             const obj = {
                 name: req.body.name,
                 password: req.body.password,
+                jabatan: req.body.jabatan,
+                nip: req.body.nip,
                 role_id: Number(req.body.role_id),
                 email: req.body.email,
             };
@@ -158,20 +163,25 @@ module.exports = {
             let user = await User.create(obj);
             if (user) {
                 user.profile = await UserProfile.create({ name: obj.name, user_id: user.id, slug: obj.slug });
+                user.jabatan = await Jabatan.create({ user_id: user.id, name: obj.jabatan, nip: obj.nip });
             };
 
             const userResponse = {
                 id: user.id,
                 email: user.email,
                 name: user.profile.name,
+                jabatan: user.jabatan.name,
+                nip: user.jabatan.nip,
                 slug: user.slug,
                 role_id: user.role_id,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             };
 
+            await transaction.commit();
             res.status(201).json(response(201, 'user created', userResponse));
         } catch (err) {
+            await transaction.rollback();
             logger.error(`Error : ${err}`);
             logger.error(`Error message: ${err.message}`);
             res.status(500).json(response(500, 'internal server error', err));
@@ -179,16 +189,21 @@ module.exports = {
         }
     },
     adminUpdateUser: async (req, res) => {
+        const transaction = await sequelize.transaction();
         try {
             const userExist = await User.findOne({ where: { id: req.params.id } });
             if (!userExist) return res.status(404).json(response(404, 'user not found'));
 
             const schema = {
+                nip: { type: "string", min: 5, },
+                jabatan: { type: "string", min: 5, },
                 name: { type: "string", min: 3 },
                 role_id: { type: "number", optional: true, convert: true }
             };
 
             const obj = {
+                nip: req.body.nip,
+                jabatan: req.body.jabatan,
                 name: req.body.name,
                 role_id: req.body.role_id,
             };
@@ -200,9 +215,14 @@ module.exports = {
 
             const user = await User.update(obj, { where: { id: req.params.id } });
             const userProfile = await UserProfile.update(obj, { where: { user_id: req.params.id } });
+            if (user && userProfile) {
+                await Jabatan.update(obj, { where: { user_id: req.params.id } });
+            }
 
+            await transaction.commit();
             return res.status(200).json(response(200, 'user updated'));
         } catch (err) {
+            await transaction.rollback();
             logger.error(`Error : ${err}`);
             logger.error(`Error message: ${err.message}`);
             res.status(500).json(response(500, 'internal server error', err));
