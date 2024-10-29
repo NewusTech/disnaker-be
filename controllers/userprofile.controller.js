@@ -766,8 +766,8 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                cv: { type: 'string', optional: false },
-                portfolio: { type: 'string', optional: false },
+                cv: { type: 'string', optional: true },
+                portfolio: { type: 'string', optional: true },
             }
 
             if (req.files) {
