@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { JobInvitation, Vacancy, User, Company, UserProfile, UserExperience, UserLink, UserOrganization, UserCertificate, Skill, Role, UserEducationHistory, EducationLevel} = require('../models');
+const { JobInvitation, Vacancy, User, Company, UserProfile, UserExperience, Application, UserLink, UserOrganization, UserCertificate, Skill, Role, UserEducationHistory, EducationLevel} = require('../models');
 const Validator = require("fastest-validator");
 const logger = require('../errorHandler/logger');
 const v = new Validator();
@@ -348,6 +348,14 @@ module.exports = {
       await JobInvitation.update(updateData, {
         where: whereCondition
       });
+
+      if (status === 'Diterima') {
+        const application = Application.create({
+          user_id: jobInvitation.user_id,
+          vacancy_id: jobInvitation.vacancy_id, 
+          status: 'Dilamar'
+        })
+      }
 
       res.status(200).json(response(200, 'success update job invitation'));
     } catch (err) {
