@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Artikel, Event, Training, User, UserProfile, Role, UserEducationHistory, EducationLevel } = require('../models');
+const { Artikel, Event, Training, User, Company, UserProfile, Role, UserEducationHistory, EducationLevel } = require('../models');
 const { Sequelize } = require('sequelize');
 const Validator = require("fastest-validator");
 const moment = require('moment-timezone');
@@ -69,7 +69,7 @@ module.exports = {
         whereCondition.endDate = undefined;
       }
 
-      [populationData, laborStatisticByEducation] = await Promise.all([
+      [populationData, laborStatisticByEducation, companyCount] = await Promise.all([
         User.findAll({
           include: [
             {
@@ -111,7 +111,9 @@ module.exports = {
               ],
             }
           ],
-        })
+        }),
+
+        Company.count({ where: whereCondition }),
       ]);
 
       let educationCount = [
@@ -159,13 +161,11 @@ module.exports = {
         female: parseInt(item['UserProfile.female']),
       }));
 
-      const educationPieData = laborStatisticByEducation.map(item => ({
-        education: item.education,
-        count: parseInt(item.count, 10)
-      }));
-
+      const userCount = await User.count({ where: {...whereCondition, role_id: 2} });
       const responseData = {
         laborStatistic: result,
+        companyCount: companyCount,
+        countUser: userCount,
         LaborByEducation: educationCount,
         totalEmploymentStatus: totalEmploymentStatus,
       }
