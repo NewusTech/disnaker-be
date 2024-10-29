@@ -398,7 +398,7 @@ module.exports = {
                     where: whereCondition,
                 }),
                 User.count({
-                    where: whereCondition
+                    where: { ...whereCondition, role_id: 2 }
                 })
             ]);
 
