@@ -144,11 +144,11 @@ module.exports = {
       ];
 
       laborStatisticByEducation.map(item => {
-        if (item.UserProfile.employmentStatus === "Sudah Bekerja") {
+        if (item.UserProfile?.employmentStatus === "Sudah Bekerja") {
           totalEmploymentStatus[0].count += 1
-        } else if (item.UserProfile.employmentStatus === "Siap Bekerja") {
+        } else if (item.UserProfile?.employmentStatus === "Siap Bekerja") {
           totalEmploymentStatus[1].count += 1
-        } else if (item.UserProfile.employmentStatus === "Tidak Bekerja") {
+        } else if (item.UserProfile?.employmentStatus === "Tidak Bekerja") {
           totalEmploymentStatus[2].count += 1
         }
       })
