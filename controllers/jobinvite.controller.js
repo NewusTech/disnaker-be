@@ -108,7 +108,7 @@ module.exports = {
           where: whereCondition
         })
       ]);
-      const pagination = generatePagination(totalCount, limit, page);
+      const pagination = generatePagination(totalCount, page, limit);
       res.status(200).json(response(200, 'success get application', jobInvitationGets, pagination));
     } catch (err) {
       logger.error(`Error : ${err}`);
@@ -142,7 +142,7 @@ module.exports = {
         return res.status(404).json(response(404, 'user invitation not found'));
       }
 
-      const pagination = generatePagination(totalCount, limit, page);
+      const pagination = generatePagination(totalCount, page, limit);
 
       return res.status(200).json({
         status: 200,
@@ -218,7 +218,7 @@ module.exports = {
         })
       ]);
 
-      const pagination = generatePagination(totalCount, limit, page);
+      const pagination = generatePagination(totalCount, page, limit);
 
       res.status(200).json(
         {
