@@ -185,19 +185,24 @@ module.exports = {
         whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
       }
 
+      whereCondition.role_id = 2;
+    
       [applicantGets, totalCount] = await Promise.all([
         User.findAll({
           include: [
             {
               model: UserProfile,
               attributes: ['id', 'name', 'employmentStatus', 'about'],
+              required: false,
               where: whereName
             },
             {
-              model: Skill
+              model: Skill,
+              required: false
             },
             {
               model: UserEducationHistory,
+              required: false,
               include: [
                 EducationLevel
               ]

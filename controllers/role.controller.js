@@ -2,6 +2,7 @@ const { response } = require('../helpers/response.formatter');
 const logger = require('../errorHandler/logger');
 const { Role, RoleHasPermission, Permission, sequelize } = require('../models');
 const Validator = require("fastest-validator");
+const { generatePagination } = require('../pagination/pagination');
 const v = new Validator();
 
 module.exports = {
@@ -52,16 +53,39 @@ module.exports = {
     //mendapatkan semua data role
     getrole: async (req, res) => {
         try {
-            //mendapatkan data semua role
-            let roleGets = await Role.findAll({
-                include: [
-                    {
-                        model: Permission
-                    }
-                ]
-            });
+            let { search } = req.query;
+            const showDeleted = req.query.showDeleted ?? null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let roleGets;
+            let totalCount;
+            let whereCondition = {};
 
-            res.status(200).json(response(200, 'success get role', roleGets));
+            if (search) {
+                whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+            }
+
+            //mendapatkan data semua role
+            [roleGets, totalCount] = await Promise.all([
+                Role.findAll({
+                    include: [
+                        {
+                            model: Permission,
+                            required: false
+                        }
+                    ],
+                    limit: limit,
+                    offset: offset,
+                }),
+                Role.count({
+                    whereCondition
+                })
+            ])
+
+            const pagination = generatePagination(totalCount, page, limit);
+
+            res.status(200).json(response(200, 'success get role', roleGets, pagination));
 
         } catch (err) {
             logger.error(`Error : ${err}`);
@@ -143,7 +167,7 @@ module.exports = {
             }
 
             //update role
-           const updateRole =  await Role.update(roleUpdateObj, {
+            const updateRole = await Role.update(roleUpdateObj, {
                 where: {
                     id: req.params.id,
                 }
@@ -155,7 +179,7 @@ module.exports = {
                     role_id: req.params.id
                 }
             })
-            
+
             roleUpdateObj.permissions.forEach(async (item) => {
                 const roleHasPermission = await RoleHasPermission.create({
                     role_id: req.params.id,

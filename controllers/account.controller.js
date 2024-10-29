@@ -45,9 +45,11 @@ module.exports = {
             },
             {
               model: Jabatan,
+              required: false
             },
             {
               model: UserProfile,
+              required: false,
               as: 'UserProfile',
               where: whereSearch
             },
@@ -59,7 +61,7 @@ module.exports = {
           where: whereCondition,
         }),
         User.count({
-          where: whereCondition
+          where: {...whereCondition,   role_id: { [Op.notIn]: [2, 3] } }
         })
       ]);
 
