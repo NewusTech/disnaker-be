@@ -388,6 +388,7 @@ module.exports = {
                         {
                             model: UserProfile,
                             as: 'UserProfile',
+                            required: false,
                             where: whereSearch
                         },
                     ],
