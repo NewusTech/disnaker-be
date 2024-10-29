@@ -122,7 +122,7 @@ module.exports = {
         })
       ]);
 
-      const pagination = generatePagination(totalCount, limit, page);
+      const pagination = generatePagination(totalCount, page, limit);
       res.status(200).json({
         stauts: 200,
         message: 'success get application',
