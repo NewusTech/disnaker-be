@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Artikel, Event, Training, User, Company, UserProfile, Role, UserEducationHistory, EducationLevel } = require('../models');
+const { Artikel, Event, Training, Complaint, User, Company, SurveyKepuasan, UserProfile, Role, UserEducationHistory, EducationLevel, YellowCard, Transmigration } = require('../models');
 const { Sequelize } = require('sequelize');
 const Validator = require("fastest-validator");
 const moment = require('moment-timezone');
@@ -116,6 +116,14 @@ module.exports = {
         Company.count({ where: whereCondition }),
       ]);
 
+      [yellowCardAcceptedCount, yellowCardRejectedCount, transmigrationAccepted, transmigrationRejected] =
+        await Promise.all([
+          YellowCard.count({ where: { status: 'Terbit' } }),
+          YellowCard.count({ where: { status: 'Ditolak' } }),
+          Transmigration.count({ where: { status: 'Terbit' } }),
+          Transmigration.count({ where: { status: 'Ditolak' } }),
+        ])
+
       let educationCount = [
         { education: "SD", count: 0 },
         { education: "SMP", count: 0 },
@@ -161,13 +169,17 @@ module.exports = {
         female: parseInt(item['UserProfile.female']),
       }));
 
-      const userCount = await User.count({ where: {...whereCondition, role_id: 2} });
+      const userCount = await User.count({ where: { ...whereCondition, role_id: 2 } });
       const responseData = {
         laborStatistic: result,
         companyCount: companyCount,
         countUser: userCount,
         LaborByEducation: educationCount,
         totalEmploymentStatus: totalEmploymentStatus,
+        yellowCardAcceptedCount: yellowCardAcceptedCount,
+        yellowCardRejectedCount: yellowCardRejectedCount,
+        transmigrationAccepted: transmigrationAccepted,
+        transmigrationRejected: transmigrationRejected
       }
 
       res.status(200).json(response(200, 'success get dashboard disnaker', responseData));
@@ -176,6 +188,103 @@ module.exports = {
       logger.error(`Error message: ${err.message}`);
       res.status(500).json(response(500, 'internal server error', err));
       console.log(err);
+    }
+  },
+
+  getDashboardPengaduan: async (req, res) => {
+    try {
+      let { year } = req.query;
+      let whereCondition = {};
+
+      if (year) {
+        whereCondition.createdAt = {
+          [Op.gte]: new Date(`${year}-01-01`),
+          [Op.lte]: new Date(`${year}-12-31`),
+        };
+      }
+      const complaints = await Complaint.findAll({
+        where: whereCondition,
+      });
+
+      const chartData = [
+        { month: "Januari", pengaduan: 0 },
+        { month: "Februari", pengaduan: 0 },
+        { month: "Maret", pengaduan: 0 },
+        { month: "April", pengaduan: 0 },
+        { month: "Mei", pengaduan: 0 },
+        { month: "Juni", pengaduan: 0 },
+        { month: "Juli", pengaduan: 0 },
+        { month: "Agustus", pengaduan: 0 },
+        { month: "September", pengaduan: 0 },
+        { month: "Oktober", pengaduan: 0 },
+        { month: "November", pengaduan: 0 },
+        { month: "Desember", pengaduan: 0 }
+      ];
+
+      complaints.forEach(complaint => {
+        const bulan = moment(complaint.timestamp).format('MMMM');
+        const bulanData = chartData.find(item => item.month === bulan);
+
+        if (bulanData) {
+          bulanData.pengaduan += 1;
+        }
+      });
+
+      console.log(chartData);
+
+
+      res.status(200).json(response(200, 'success get dashboard pengaduan', chartData));
+    }
+    catch (err) {
+      logger.error(`Error : ${err}`);
+      logger.error(`Error message: ${err.message}`);
+      res.status(500).json(response(500, 'internal server error', err));
+      console.log(err);
+    }
+  },
+  getDashboardIndeksKepuasan: async (req, res) => {
+    try {
+      let { yearNow, monthNow } = req.query;
+      let whereCondition = {};
+      const now = new Date().getFullYear();
+      const monthnow = new Date().getMonth() + 1;
+      whereCondition.createdAt = {
+        [Op.gte]: new Date(`${now}-${monthnow}-01`),
+        [Op.lte]: new Date(`${now}-${monthnow}-31`),
+      };
+
+      if (yearNow) {
+        whereCondition.createdAt = {
+          [Op.gte]: new Date(`${yearNow}-01-01`),
+          [Op.lte]: new Date(`${yearNow}-12-31`),
+        };
+      }
+
+      // console.log(now);
+      // console.log(monthnow);
+      let dataSurvey = {};
+      let totalPercentageEasyUse = 0;
+      let totalPercentageServiceTransparency = 0;
+      
+      const surveyKepuasan = await SurveyKepuasan.findAll({
+        where: whereCondition
+      });
+      
+      surveyKepuasan.forEach(element => {
+        totalPercentageEasyUse += Number(element.isEasyUse);
+        totalPercentageServiceTransparency += Number(element.serviceTransparency);
+      });
+      
+      // Hitung persentase untuk isEasyUse dan serviceTransparency
+      dataSurvey.isEasyUse = totalPercentageEasyUse ?  ((totalPercentageEasyUse / surveyKepuasan.length) * 20).toFixed(1) : 0; // Persentase dari isEasyUse
+      dataSurvey.serviceTransparency = totalPercentageServiceTransparency ? ((totalPercentageServiceTransparency / surveyKepuasan.length) * 20).toFixed(1): 0; // Persentase dari serviceTransparency
+
+      res.status(200).json(response(200, 'success get dashboard indeks kepuasan', dataSurvey));
+    } catch (error) {
+      console.log(error);
+      logger.error(`Error : ${error}`);
+      logger.error(`Error message: ${error.message}`);
+      res.status(500).json(response(500, 'internal server error', error));
     }
   }
 
