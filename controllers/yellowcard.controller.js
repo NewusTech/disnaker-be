@@ -3,6 +3,7 @@ const moment = require('moment');
 require('moment/locale/id');
 const { YellowCard, User, UserProfile, Jabatan, UserEducationHistory, EducationLevel } = require('../models');
 const puppeteer = require('puppeteer');
+const qrCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const Validator = require("fastest-validator");
@@ -272,6 +273,16 @@ module.exports = {
       // Baca file gambar
       const logoPath = path.resolve(__dirname, '../views/kartu-kuning/logo.png');
       const logoBase64 = fs.readFileSync(logoPath, 'base64');
+
+      const dataSign = {
+        name: jabatan.User.UserProfile.name,
+        nik: jabatan.nip
+      }
+
+      const qrCodeSign = Buffer.from(JSON.stringify(dataSign)).toString('base64');
+
+      const qrCodeSignDataUrl= await qrCode.toDataURL(qrCodeSign);
+      htmlContent = htmlContent.replace('{{qrCodeSign}}', qrCodeSignDataUrl);
 
       // Sisipkan base64 ke dalam template HTML
       htmlContent = htmlContent.replace('{{logo}}', `data:image/png;base64,${logoBase64}`);

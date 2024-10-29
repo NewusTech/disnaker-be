@@ -123,7 +123,12 @@ module.exports = {
       ]);
 
       const pagination = generatePagination(totalCount, limit, page);
-      res.status(200).json(response(200, 'success get application', applicationGets, pagination));
+      res.status(200).json({
+        stauts: 200,
+        message: 'success get application',
+        data: applicationGets,
+        pagination: pagination
+      });
     } catch (err) {
       logger.error(`Error : ${err}`);
       logger.error(`Error message: ${err.message}`);
