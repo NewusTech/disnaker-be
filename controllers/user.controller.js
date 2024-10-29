@@ -458,7 +458,7 @@ module.exports = {
             } else {
                 whereCondition.deletedAt = null;
             }
-
+            whereCondition.role_id = 3;
             [userGets, totalCount] = await Promise.all([
                 User.findAll({
                     include: [
@@ -470,6 +470,7 @@ module.exports = {
                         },
                         {
                             model: Company,
+                            required: false,
                             where: whereSearch
                         },
                     ],
