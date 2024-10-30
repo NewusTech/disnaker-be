@@ -30,7 +30,7 @@ route.post('/changepwadmin/:slug', [mid.checkRolesAndLogout(['Super Admin'])], u
 
 route.post('/forgotpassword', userController.forgotPassword);
 
-route.post('/reset/:token', userController.resetPassword);
+route.post('/resetpassword', userController.resetPassword);
 
 route.put('/permissions', [mid.checkRolesAndLogout(['Super Admin'])], userController.updateUserpermissions);
 
