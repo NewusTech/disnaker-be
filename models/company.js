@@ -25,6 +25,10 @@ module.exports = (sequelize, DataTypes) => {
       Company.hasMany(models.Certification, {
         foreignKey: 'company_id',
       });
+
+      Company.hasMany(models.Vacancy, {
+        foreignKey: 'company_id',
+      });
     }
   }
   Company.init({
