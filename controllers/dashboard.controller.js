@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Artikel, Event, Training, Complaint, User, Company, SurveyKepuasan, UserProfile, Role, UserEducationHistory, EducationLevel, YellowCard, Transmigration } = require('../models');
+const { Artikel, Event, Training, Certification, Application, Consultation, Complaint, User, Company, SurveyKepuasan, UserProfile, Role, UserEducationHistory, EducationLevel, YellowCard, Vacancy, Transmigration } = require('../models');
 const { Sequelize } = require('sequelize');
 const Validator = require("fastest-validator");
 const moment = require('moment-timezone');
@@ -10,6 +10,7 @@ const { generatePagination } = require('../pagination/pagination');
 const logger = require('../errorHandler/logger');
 const { updateImageProfile } = require('./userprofile.controller');
 const { id } = require('date-fns/locale');
+const vacancy = require('../models/vacancy');
 
 
 module.exports = {
@@ -265,23 +266,124 @@ module.exports = {
       let dataSurvey = {};
       let totalPercentageEasyUse = 0;
       let totalPercentageServiceTransparency = 0;
-      
+
       const surveyKepuasan = await SurveyKepuasan.findAll({
         where: whereCondition
       });
-      
+
       surveyKepuasan.forEach(element => {
         totalPercentageEasyUse += Number(element.isEasyUse);
         totalPercentageServiceTransparency += Number(element.serviceTransparency);
       });
-      
+
       // Hitung persentase untuk isEasyUse dan serviceTransparency
-      dataSurvey.isEasyUse = totalPercentageEasyUse ?  ((totalPercentageEasyUse / surveyKepuasan.length) * 20).toFixed(1) : 0; // Persentase dari isEasyUse
-      dataSurvey.serviceTransparency = totalPercentageServiceTransparency ? ((totalPercentageServiceTransparency / surveyKepuasan.length) * 20).toFixed(1): 0; // Persentase dari serviceTransparency
+      dataSurvey.isEasyUse = totalPercentageEasyUse ? ((totalPercentageEasyUse / surveyKepuasan.length) * 20).toFixed(1) : 0; // Persentase dari isEasyUse
+      dataSurvey.serviceTransparency = totalPercentageServiceTransparency ? ((totalPercentageServiceTransparency / surveyKepuasan.length) * 20).toFixed(1) : 0; // Persentase dari serviceTransparency
 
       res.status(200).json(response(200, 'success get dashboard indeks kepuasan', dataSurvey));
     } catch (error) {
       console.log(error);
+      logger.error(`Error : ${error}`);
+      logger.error(`Error message: ${error.message}`);
+      res.status(500).json(response(500, 'internal server error', error));
+    }
+  },
+
+  getDashboardInstansi: async (req, res) => {
+    try {
+      let whereCondition = {};
+      let company = await Company.findOne({
+        where: { user_id: auth.userId },
+        include: [
+          {
+            model: Vacancy,
+            attributes: ['id', 'title'],
+            include: [
+              {
+                model: Application,
+                include: [
+                  {
+                    model: User,
+                    attributes: ['id', 'email'],
+                    include: [
+                      {
+                        attributes: ['id', 'gender'],
+                        model: UserProfile
+                      },
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      });
+      if (!company) {
+        return res.status(404).json(response(404, 'company not found'));
+      }
+
+      let barChart = [];
+      company.Vacancies.forEach(vacancy => {
+        let temp = {
+          jobTitle: vacancy.title,
+          male: 0,
+          female: 0
+        }
+        vacancy.Applications.forEach(application => {
+          if (application.User.UserProfile.gender === 'Laki-laki') {
+            temp.male += 1;
+          } else {
+            temp.female += 1;
+          }
+        })
+        barChart.push(temp);
+      })// Query kedua untuk vacancy dengan status `isPublished: true` dan menghitung aplikasi berdasarkan status
+      let publishedVacancies = await Company.findOne({
+        where: { user_id: auth.userId },
+        include: [
+          {
+            model: Vacancy,
+            where: { isPublished: 'true' },
+            attributes: ['id', 'title'],
+            include: [
+              {
+                model: Application,
+                attributes: ['status']  // hanya ambil status
+              }
+            ]
+          }
+        ]
+      });
+      
+      if (!publishedVacancies) {
+        return res.status(404).json(response(404, 'no published vacancies found'));
+      }
+      
+      // Menghitung jumlah aplikasi berdasarkan status
+      let statusCount = {};
+      publishedVacancies.Vacancies.forEach(vacancy => {
+        vacancy.Applications.forEach(application => {
+          const appStatus = application.status;
+          // Tambahkan atau inisialisasi counter untuk setiap status
+          statusCount[appStatus] = (statusCount[appStatus] || 0) + 1;
+        });
+      });
+
+      whereCondition.company_id = company.id;
+      [totalTraining, totalCertification, totalConsulting] = await Promise.all([
+        Training.count({ where: whereCondition }),
+        Certification.count({ where: whereCondition }),
+        Consultation.count({ where: whereCondition }),
+      ])
+      const data = {
+        barChart: barChart,
+        totalTraining: totalTraining,
+        totalCertification: totalCertification,
+        totalConsulting: totalConsulting, 
+        statusCount: statusCount
+      }
+      res.status(200).json(response(200, 'success get dashboard perusahaans', data));
+    } catch (error) {
       logger.error(`Error : ${error}`);
       logger.error(`Error message: ${error.message}`);
       res.status(500).json(response(500, 'internal server error', error));

@@ -8,4 +8,5 @@ route.get('/dashboard/get', dashboardController.getDashboard);
 route.get('/dashboard/disnaker/get', dashboardController.getDashboardDisnaker);
 route.get('/dashboard/pengaduan/get', dashboardController.getDashboardPengaduan);
 route.get('/dashboard/skm/get', dashboardController.getDashboardIndeksKepuasan);
+route.get('/dashboard/company/get', mid.checkRoles(), dashboardController.getDashboardInstansi);
 module.exports = route
