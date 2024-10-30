@@ -820,36 +820,31 @@ module.exports = {
     forgotPassword: async (req, res) => {
         const { email } = req.body;
 
+        console.log(email);
         try {
             const user = await User.findOne({
-                include: [
-                    {
-                        model: UserProfile,
-                        attributes: ['email'],
-                        where: { email },
-                    }
-                ]
+                where: { email },
             },);
 
             if (!user) {
                 return res.status(404).json({ message: 'Email tidak terdaftar.' });
             }
 
-            const token = crypto.randomBytes(20).toString('hex');
-            const resetpasswordexpires = Date.now() + 3600000;
+            const token = crypto.randomInt(100000, 999999).toString();
+            const resetpasswordexpires = Date.now() + 1800000;
 
             user.resetpasswordtoken = token;
             user.resetpasswordexpires = resetpasswordexpires;
 
-            await user.save();
+        await user.save();
 
             const mailOptions = {
-                to: user?.UserProfile?.email,
+                to: user?.email,
                 from: process.env.EMAIL_NAME,
                 subject: 'Password Reset',
                 text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
-                Please click on the following link, or paste this into your browser to complete the process:\n\n
-                ${process.env.WEBSITE_URL}new-password/${token}\n\n
+                Please input the following number into reset password field to complete the process:\n\n
+                ${token}\n\n
                 If you did not request this, please ignore this email and your password will remain unchanged.\n`
             };
 
@@ -868,8 +863,7 @@ module.exports = {
     },
 
     resetPassword: async (req, res) => {
-        const { token } = req.params;
-        const { newPassword, confirmNewPassword } = req.body;
+        const { newPassword, confirmNewPassword, token } = req.body;
 
         if (!newPassword || !confirmNewPassword) {
             return res.status(400).json({ message: 'Semua kolom wajib diisi.' });
@@ -880,7 +874,7 @@ module.exports = {
         }
 
         try {
-            const user = await User.findOne({
+            const user = await User.scope('withPassword').findOne({
                 where: {
                     resetpasswordtoken: token,
                     resetpasswordexpires: { [Op.gt]: Date.now() }
